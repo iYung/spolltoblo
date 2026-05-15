@@ -6,11 +6,6 @@ function cardImage(card) {
   return null
 }
 
-function cardText(card) {
-  if (card.oracle_text) return card.oracle_text
-  if (card.card_faces?.length) return card.card_faces.map((f) => f.oracle_text).filter(Boolean).join('\n—\n')
-  return ''
-}
 
 export default function CardPin({ pin, areaRef, onRemove, onMove }) {
   const [hovered, setHovered] = useState(false)
@@ -42,11 +37,12 @@ export default function CardPin({ pin, areaRef, onRemove, onMove }) {
   // Position popup so it stays on screen
   const showAbove = pin.y > 38
   const popupStyle = {
-    [showAbove ? 'bottom' : 'top']: 'calc(100% + 8px)',
+    bottom: showAbove ? 'calc(100% + 8px)' : 'auto',
+    top: showAbove ? 'auto' : 'calc(100% + 8px)',
     ...(pin.x > 65
-      ? { right: 0 }
+      ? { right: 0, left: 'auto', transform: 'none' }
       : pin.x < 30
-      ? { left: 0 }
+      ? { left: 0, transform: 'none' }
       : { left: '50%', transform: 'translateX(-50%)' }),
   }
 
@@ -67,16 +63,9 @@ export default function CardPin({ pin, areaRef, onRemove, onMove }) {
         <button className="card-pin-remove" onClick={onRemove}>✕</button>
       </div>
 
-      {hovered && !dragging && (
+      {hovered && !dragging && img && (
         <div className="card-pin-popup" style={popupStyle}>
-          {img && <img src={img} alt={pin.card.name} className="card-popup-img" />}
-          <div className="card-popup-text">
-            <div className="card-type">{pin.card.type_line}</div>
-            <div className="card-oracle">{cardText(pin.card)}</div>
-            {pin.card.power != null && (
-              <div className="card-pt">{pin.card.power}/{pin.card.toughness}</div>
-            )}
-          </div>
+          <img src={img} alt={pin.card.name} className="card-popup-img" />
         </div>
       )}
     </div>

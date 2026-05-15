@@ -563,21 +563,13 @@ html, body, #root {
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  gap: 10px;
-  width: 300px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   z-index: 30;
+  line-height: 0;
 }
 
 .card-popup-img {
-  width: 100px;
-  border-radius: 6px;
-  flex-shrink: 0;
+  width: 300px;
+  border-radius: 8px;
 }
-
-.card-popup-text { flex: 1; min-width: 0; }
