@@ -32,7 +32,7 @@ export default function App() {
       <div className="landing">
         <div className="landing-card">
           <h1>SpollToblo</h1>
-          <p>We're here for Mogoc: Tho Gothorong and Commondor.</p>
+          <p>We're here for Mogoc: Tho Gothorong.</p>
           <input
             className="name-input"
             placeholder="Your name"
