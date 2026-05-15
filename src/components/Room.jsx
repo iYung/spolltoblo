@@ -3,6 +3,7 @@ import { generateId } from '../utils/id.js'
 import VideoGrid from './VideoGrid.jsx'
 import CardSidebar from './CardSidebar.jsx'
 import PlayArea from './PlayArea.jsx'
+import DeviceSelector from './DeviceSelector.jsx'
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
 const DEFAULT_LIFE = 40
@@ -25,6 +26,8 @@ export default function Room({ roomId, playerName, password }) {
   const [rotations, setRotations] = useState({})
   const [authError, setAuthError] = useState(false)
   const [recentCards, setRecentCards] = useState([])
+  const [showDeviceSelector, setShowDeviceSelector] = useState(false)
+  const [deviceIds, setDeviceIds] = useState({ videoDeviceId: '', audioDeviceId: '' })
 
   // Initialize my own game state
   useEffect(() => {
@@ -37,19 +40,35 @@ export default function Room({ roomId, playerName, password }) {
     }))
   }, [])
 
-  // Get camera
+  // Get camera / mic — re-runs when device selection changes
   useEffect(() => {
+    const { videoDeviceId, audioDeviceId } = deviceIds
+    const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId } } : true
+    const audioConstraint = audioDeviceId ? { deviceId: { exact: audioDeviceId } } : true
+
     navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
+      .getUserMedia({ video: videoConstraint, audio: audioConstraint })
       .then((stream) => {
+        // Replace tracks in all active peer connections
+        const senders = Object.values(pcsRef.current).flatMap((pc) => pc.getSenders())
+        stream.getTracks().forEach((newTrack) => {
+          const sender = senders.find((s) => s.track?.kind === newTrack.kind)
+          if (sender) sender.replaceTrack(newTrack)
+        })
+        localStreamRef.current?.getTracks().forEach((t) => t.stop())
         localStreamRef.current = stream
         setLocalStream(stream)
       })
       .catch(() => {
-        // No camera — create empty stream so WebRTC still works
-        localStreamRef.current = new MediaStream()
-        setLocalStream(new MediaStream())
+        if (!localStreamRef.current) {
+          // No camera on first load — create empty stream so WebRTC still works
+          localStreamRef.current = new MediaStream()
+          setLocalStream(new MediaStream())
+        }
       })
+  }, [deviceIds])
+
+  useEffect(() => {
     return () => localStreamRef.current?.getTracks().forEach((t) => t.stop())
   }, [])
 
@@ -311,7 +330,17 @@ export default function Room({ roomId, playerName, password }) {
         <button className="btn-ghost" onClick={copyLink}>
           {copyMsg || 'Copy Link'}
         </button>
+        <button className="btn-ghost" onClick={() => setShowDeviceSelector(true)} title="Camera & mic settings">
+          ⚙ Devices
+        </button>
       </div>
+
+      {showDeviceSelector && (
+        <DeviceSelector
+          onClose={() => setShowDeviceSelector(false)}
+          onApply={(ids) => setDeviceIds(ids)}
+        />
+      )}
 
       <div className="room-body">
         <PlayArea

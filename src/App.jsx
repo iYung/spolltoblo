@@ -32,7 +32,7 @@ export default function App() {
       <div className="landing">
         <div className="landing-card">
           <h1>SpollToblo</h1>
-          <p>Play Magic: The Gathering over webcam with friends.</p>
+          <p>We're here for Mogoc: Tho Gothorong and Commondor.</p>
           <input
             className="name-input"
             placeholder="Your name"
