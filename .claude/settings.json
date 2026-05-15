@@ -7,7 +7,14 @@
       "Bash(rm -rf .git)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git -C /Users/ivan/Development/spelltable log --oneline -10)",
+      "Bash(git -C /Users/ivan/Development/spelltable show fc50580 --stat --format=\"%s%n%b\")",
+      "Bash(git -C /Users/ivan/Development/spelltable diff 9ff3153..HEAD --name-only)",
+      "Bash(git -C /Users/ivan/Development/spelltable show e7f93a1 --stat --format=\"%s%n%b\")",
+      "Bash(git -C /Users/ivan/Development/spelltable show 53b24de --stat --format=\"%s%n%b\")",
+      "Bash(git -C /Users/ivan/Development/spelltable show fc50580 -- src/App.jsx src/components/Room.jsx)",
+      "Bash(git -C /Users/ivan/Development/spelltable show fc50580 -- src/components/Room.jsx)"
     ]
   }
 }

@@ -24,6 +24,7 @@ export default function Room({ roomId, playerName, password }) {
   const [volumes, setVolumes] = useState({})
   const [rotations, setRotations] = useState({})
   const [authError, setAuthError] = useState(false)
+  const [recentCards, setRecentCards] = useState([])
 
   // Initialize my own game state
   useEffect(() => {
@@ -180,6 +181,11 @@ export default function Room({ roomId, playerName, password }) {
                 commanderDamage: payload.commanderDamage,
               },
             }))
+          } else if (payload.type === 'card-pinned') {
+            setRecentCards((prev) => [
+              { card: payload.card, playerName: payload.playerName },
+              ...prev.filter((e) => e.card.id !== payload.card.id),
+            ].slice(0, 5))
           }
           break
         }
@@ -239,6 +245,7 @@ export default function Room({ roomId, playerName, password }) {
 
   function pinCard(card, x, y) {
     setPinnedCards((prev) => [...prev, { id: generateId(), card, x, y }])
+    broadcastGameEvent({ type: 'card-pinned', card, playerName })
   }
 
   function unpinCard(id) {
@@ -329,6 +336,7 @@ export default function Room({ roomId, playerName, password }) {
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
             onClose={() => setSidebarOpen(false)}
+            recentCards={recentCards}
           />
         )}
 

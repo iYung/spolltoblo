@@ -179,7 +179,7 @@ html, body, #root {
 .video-el {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -488,28 +488,33 @@ html, body, #root {
 .card-name { font-weight: 600; font-size: 13px; flex: 1; }
 .card-mana { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 
-.card-detail {
-  display: flex;
-  gap: 10px;
-  padding: 0 10px 10px;
-}
-
-.card-img {
-  width: 120px;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.card-text { flex: 1; min-width: 0; }
-.card-type { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-style: italic; }
-.card-oracle { font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
-.card-pt { font-size: 13px; font-weight: 700; margin-top: 6px; color: var(--accent); }
 
 .card-drag-hint {
   font-size: 10px;
   color: var(--text-muted);
   padding: 2px 10px 6px;
   opacity: 0.6;
+}
+
+.sidebar-recent {
+  border-top: 1px solid var(--border);
+  padding: 8px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-recent-header {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 2px 4px;
+}
+
+.recent-player {
+  color: var(--accent-dim);
+  font-style: italic;
 }
 
 .sidebar-open-btn {

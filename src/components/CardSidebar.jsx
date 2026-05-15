@@ -8,18 +8,12 @@ function cardImage(card) {
   return null
 }
 
-function cardText(card) {
-  if (card.oracle_text) return card.oracle_text
-  if (card.card_faces?.length) return card.card_faces.map((f) => f.oracle_text).filter(Boolean).join('\n—\n')
-  return ''
-}
 
-export default function CardSidebar({ width, onWidthChange, onClose }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [] }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [expanded, setExpanded] = useState(null)
   const [hoveredCard, setHoveredCard] = useState(null)
   const [hoverAnchor, setHoverAnchor] = useState(null)
   const debounceRef = useRef(null)
@@ -104,43 +98,52 @@ export default function CardSidebar({ width, onWidthChange, onClose }) {
           <p className="sidebar-status muted">Type a card name to search. Drag cards onto the board for quick reference.</p>
         )}
 
-        {results.map((card) => {
-          const img = cardImage(card)
-          const isExpanded = expanded === card.id
-          return (
-            <div
-              key={card.id}
-              className="card-result"
-              draggable
-              onDragStart={(e) => dragCard(e, card)}
-              onMouseEnter={(e) => handleCardMouseEnter(e, card)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              <div className="card-result-header" onClick={() => setExpanded(isExpanded ? null : card.id)}>
-                <span className="card-name">{card.name}</span>
-                <span className="card-mana">{card.mana_cost ?? ''}</span>
-              </div>
-              {isExpanded && (
-                <div className="card-detail">
-                  {img && <img src={img} alt={card.name} className="card-img" />}
-                  <div className="card-text">
-                    <div className="card-type">{card.type_line}</div>
-                    <div className="card-oracle">{cardText(card)}</div>
-                    {card.power != null && (
-                      <div className="card-pt">{card.power}/{card.toughness}</div>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="card-drag-hint">⠿ drag to board</div>
+        {results.map((card) => (
+          <div
+            key={card.id}
+            className="card-result"
+            draggable
+            onDragStart={(e) => dragCard(e, card)}
+            onMouseEnter={(e) => handleCardMouseEnter(e, card)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <div className="card-result-header">
+              <span className="card-name">{card.name}</span>
+              <span className="card-mana">{card.mana_cost ?? ''}</span>
             </div>
-          )
-        })}
+            <div className="card-drag-hint">⠿ drag to board</div>
+          </div>
+        ))}
       </div>
+      {recentCards.length > 0 && (
+        <div className="sidebar-recent">
+          <div className="sidebar-recent-header">Recently played by others</div>
+          {recentCards.map(({ card, playerName }, i) => {
+            const img = cardImage(card)
+            return (
+              <div
+                key={`${card.id}-${i}`}
+                className="card-result"
+                draggable
+                onDragStart={(e) => dragCard(e, card)}
+                onMouseEnter={(e) => handleCardMouseEnter(e, card)}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
+                <div className="card-result-header">
+                  <span className="card-name">{card.name}</span>
+                  <span className="card-mana recent-player">{playerName}</span>
+                </div>
+                <div className="card-drag-hint">⠿ drag to board</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {hoveredCard && cardImage(hoveredCard) && hoverAnchor && (
         <div style={{
           position: 'fixed',
-          top: hoverAnchor.top,
+          top: Math.min(hoverAnchor.top, window.innerHeight - 420),
           right: window.innerWidth - hoverAnchor.left + 8,
           zIndex: 50,
           lineHeight: 0,
