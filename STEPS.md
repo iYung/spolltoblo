@@ -78,6 +78,31 @@ Let each player flip any remote (or their own) video upside down — useful when
 4. Add a small rotate button (e.g. `↻`) in the player overlay that toggles the state
 5. Store rotation per-peerId so adjusting one player doesn't affect others
 
+### Deterministic player ordering
+
+Player display order is currently driven by JavaScript object key insertion order in the `peers` state map, which reflects WebSocket message arrival timing — so every client ends up with a different visual grid. This makes it impossible for players to agree on turn order by position.
+
+**Fix:** Have the server assign each peer a sequential `joinOrder` number. All clients sort by `joinOrder` before rendering.
+
+**Server (`server/index.js`):**
+1. Assign `joinOrder = room.size` when each peer joins (before adding them to the room Map)
+2. Store `joinOrder` in the room Map entry alongside `ws` and `name`
+3. Change `room-peers` to send full peer objects and the joining client's own join order: `{ type: 'room-peers', myJoinOrder, peers: [{ peerId, name, joinOrder }, ...] }`
+4. Change `peer-joined` broadcast to include `joinOrder`: `{ type: 'peer-joined', peerId, name, joinOrder }`
+
+**Client (`src/components/Room.jsx`):**
+1. Add a `myJoinOrder` ref; populate it from the server's `room-peers` response
+2. Update the `room-peers` handler to read per-peer `joinOrder` into the `peers` state
+3. Update the `peer-joined` handler to store `joinOrder` alongside `name` and `stream`
+4. When building `allPlayers`, add `joinOrder` for the local player and sort the whole array ascending before passing to `VideoGrid`
+
+```js
+const allPlayers = [
+  { peerId: myId.current, ..., joinOrder: myJoinOrder.current },
+  ...Object.entries(peers).map(([peerId, peer]) => ({ peerId, ..., joinOrder: peer.joinOrder ?? Infinity })),
+].sort((a, b) => a.joinOrder - b.joinOrder)
+```
+
 ### App rename (MagicDesk / SpollToblo)
 Rename the app away from "SpellTable" to avoid confusion with the official product. Name candidates: **MagicDesk** (clean, descriptive) or **SpollToblo** (chaotic, fun).
 
