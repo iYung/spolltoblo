@@ -116,18 +116,7 @@ html, body, #root {
 }
 
 .room-title { font-weight: 700; color: var(--accent); font-size: 16px; }
-.room-id { color: var(--text-muted); font-size: 12px; }
-
-.ws-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  flex: 1;
-}
-.ws-connecting { background: #888; }
-.ws-open       { background: var(--green); }
-.ws-closed     { background: var(--red); }
+.room-id { color: var(--text-muted); font-size: 12px; flex: 1; }
 
 .room-body {
   display: flex;
@@ -531,11 +520,22 @@ html, body, #root {
   background: rgba(15, 15, 26, 0.9);
   border: 1px solid var(--accent-dim);
   border-radius: 20px;
-  padding: 4px 8px 4px 10px;
-  cursor: default;
+  padding: 4px 8px 4px 6px;
   white-space: nowrap;
-  max-width: 160px;
+  max-width: 180px;
+  user-select: none;
 }
+
+.card-pin-handle {
+  color: var(--text-muted);
+  cursor: grab;
+  font-size: 12px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.card-pin-handle:active { cursor: grabbing; }
+.card-pin-dragging .card-pin-chip { border-color: var(--accent); opacity: 0.85; }
 
 .card-pin-name {
   font-size: 12px;

@@ -1,21 +1,35 @@
-# SpellTable Clone
+# SpellTable
 
-A lightweight browser-based webcam card game platform for playing Magic: The Gathering with friends online — no automatic card recognition required.
+A lightweight browser-based webcam card game platform for playing Magic: The Gathering with friends — no accounts, no card recognition, just share a link and play.
 
-## Goal
+## Running locally
 
-Build a simple, self-hosted alternative to SpellTable where:
+```bash
+npm install
+npm run dev
+```
 
-- Players connect via a shared URL and stream webcams to each other in real time
-- A resizable right-side panel lets players search for Magic card details manually
-- Cards found in the search panel can be dragged to the left play area for quick hover-to-read reference
-- No computer vision or automatic card detection — everything is manual and lightweight
+Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001`.
 
-## Core Features
+## How to play
 
-- **Webcam streaming** — multiple players connect to a shared room URL and see each other's cameras
-- **Card search panel** — resizable/collapsible right sidebar with a search bar that pulls card details (name, image, oracle text) from an API
-- **Drag-to-reference** — drag a card from the search panel onto the play area; hover it to read its details
-- **Life tracking** — each player has a life total tracker (default 40 for Commander)
-- **Commander damage tracking** — track damage dealt from each opponent's commander separately per player
-- **Minimal setup** — shareable URL, no accounts required
+1. Open the app and enter your name
+2. Click **Create Room** — your URL changes to include a room ID
+3. Copy and share that URL with your friends
+4. Everyone enters their name and joins
+5. Webcams connect automatically peer-to-peer
+
+## Features
+
+- **Webcam streaming** — low-latency peer-to-peer video via WebRTC, no server relay
+- **Card search** — resizable right sidebar powered by the Scryfall API; search any Magic card by name
+- **Card pins** — drag a card from the sidebar onto the board; hover the chip to read its details; grab the `⠿` handle to reposition it
+- **Life tracking** — click your life total to edit it directly; use +1 / -1 / +5 / -5 buttons; syncs to all players in real time
+- **Commander damage** — track damage from each opponent's commander separately; highlights at 21 (elimination threshold)
+- **Shareable rooms** — room lives in the URL; no sign-up required
+
+## Deploying
+
+Set `NODE_ENV=production`, build with `npm run build`, and start with `node server/index.js`. The server serves the built frontend as static files.
+
+Recommended hosts: Railway (easiest), Fly.io, or any VPS with Node.

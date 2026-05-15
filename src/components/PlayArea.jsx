@@ -8,6 +8,7 @@ export default function PlayArea({
   pinnedCards,
   onPinCard,
   onUnpinCard,
+  onMoveCard,
   onLifeDelta,
   onSetLife,
   onCommanderDamage,
@@ -46,7 +47,13 @@ export default function PlayArea({
       />
 
       {pinnedCards.map((pin) => (
-        <CardPin key={pin.id} pin={pin} onRemove={() => onUnpinCard(pin.id)} />
+        <CardPin
+          key={pin.id}
+          pin={pin}
+          areaRef={areaRef}
+          onRemove={() => onUnpinCard(pin.id)}
+          onMove={onMoveCard}
+        />
       ))}
     </div>
   )

@@ -18,7 +18,6 @@ export default function Room({ roomId, playerName }) {
   const [gameState, setGameState] = useState({}) // peerId -> { life, commanderDamage }
   const [pinnedCards, setPinnedCards] = useState([])
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [wsStatus, setWsStatus] = useState('connecting') // connecting | open | closed
   const [sidebarWidth, setSidebarWidth] = useState(320)
   const [copyMsg, setCopyMsg] = useState('')
 
@@ -95,11 +94,8 @@ export default function Room({ roomId, playerName }) {
     wsRef.current = ws
 
     ws.onopen = () => {
-      setWsStatus('open')
       ws.send(JSON.stringify({ type: 'join', roomId, peerId: myId.current, name: playerName }))
     }
-
-    ws.onerror = () => setWsStatus('closed')
 
     ws.onmessage = async (event) => {
       const msg = JSON.parse(event.data)
@@ -180,7 +176,6 @@ export default function Room({ roomId, playerName }) {
     }
 
     ws.onclose = () => {
-      setWsStatus('closed')
       Object.values(pcsRef.current).forEach((pc) => pc.close())
       pcsRef.current = {}
     }
@@ -230,6 +225,10 @@ export default function Room({ roomId, playerName }) {
     setPinnedCards((prev) => prev.filter((p) => p.id !== id))
   }
 
+  function moveCard(id, x, y) {
+    setPinnedCards((prev) => prev.map((p) => p.id === id ? { ...p, x, y } : p))
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(window.location.href)
     setCopyMsg('Copied!')
@@ -255,7 +254,6 @@ export default function Room({ roomId, playerName }) {
       <div className="room-header">
         <span className="room-title">SpellTable</span>
         <span className="room-id">Room: {roomId}</span>
-        <span className={`ws-dot ws-${wsStatus}`} title={`Signaling: ${wsStatus}`} />
         <button className="btn-ghost" onClick={copyLink}>
           {copyMsg || 'Copy Link'}
         </button>
@@ -278,6 +276,7 @@ export default function Room({ roomId, playerName }) {
           pinnedCards={pinnedCards}
           onPinCard={pinCard}
           onUnpinCard={unpinCard}
+          onMoveCard={moveCard}
           onLifeDelta={updateMyLife}
           onSetLife={setMyLife}
           onCommanderDamage={updateCommanderDamage}
