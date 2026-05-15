@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
-// rooms: Map<roomId, Map<peerId, ws>>
+// rooms: Map<roomId, Map<peerId, { ws, name, joinOrder }>>
 const rooms = new Map()
 
 wss.on('connection', (ws) => {
@@ -36,15 +36,18 @@ wss.on('connection', (ws) => {
         if (!rooms.has(roomId)) rooms.set(roomId, new Map())
         const room = rooms.get(roomId)
 
-        // Tell new peer who is already here
-        ws.send(JSON.stringify({ type: 'room-peers', peers: [...room.keys()] }))
+        const joinOrder = room.size
+
+        // Tell new peer who is already here (with join order) and their own join order
+        const existingPeers = [...room.entries()].map(([id, info]) => ({ peerId: id, name: info.name, joinOrder: info.joinOrder }))
+        ws.send(JSON.stringify({ type: 'room-peers', myJoinOrder: joinOrder, peers: existingPeers }))
 
         // Notify everyone else that this peer joined
         room.forEach((peer) => {
-          peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name }))
+          peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name, joinOrder }))
         })
 
-        room.set(peerId, { ws, name: msg.name })
+        room.set(peerId, { ws, name: msg.name, joinOrder })
         break
       }
 

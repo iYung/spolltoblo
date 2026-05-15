@@ -9,6 +9,7 @@ const DEFAULT_LIFE = 40
 
 export default function Room({ roomId, playerName }) {
   const myId = useRef(generateId())
+  const myJoinOrder = useRef(0)
   const wsRef = useRef(null)
   const pcsRef = useRef({}) // peerId -> RTCPeerConnection
   const localStreamRef = useRef(null)
@@ -104,18 +105,20 @@ export default function Room({ roomId, playerName }) {
 
       switch (msg.type) {
         case 'room-peers': {
-          for (const peerId of msg.peers) {
-            if (peerId === myId.current) continue
-            const pc = createPC(peerId)
+          myJoinOrder.current = msg.myJoinOrder
+          for (const peer of msg.peers) {
+            if (peer.peerId === myId.current) continue
+            setPeers((prev) => ({ ...prev, [peer.peerId]: { ...prev[peer.peerId], name: peer.name, joinOrder: peer.joinOrder, stream: prev[peer.peerId]?.stream ?? null } }))
+            const pc = createPC(peer.peerId)
             const offer = await pc.createOffer()
             await pc.setLocalDescription(offer)
-            sendWs({ type: 'offer', to: peerId, sdp: offer })
+            sendWs({ type: 'offer', to: peer.peerId, sdp: offer })
           }
           break
         }
 
         case 'peer-joined': {
-          setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null } }))
+          setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null, joinOrder: msg.joinOrder } }))
           setGameState((prev) => ({
             ...prev,
             [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {} },
@@ -247,15 +250,16 @@ export default function Room({ roomId, playerName }) {
 
   const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {} }
   const allPlayers = [
-    { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState },
+    { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
       peerId,
       name: peer.name ?? peerId,
       stream: peer.stream,
       isLocal: false,
       state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {} },
+      joinOrder: peer.joinOrder ?? Infinity,
     })),
-  ]
+  ].sort((a, b) => a.joinOrder - b.joinOrder)
 
   const alone = Object.keys(peers).length === 0
 
