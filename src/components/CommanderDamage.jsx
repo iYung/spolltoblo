@@ -1,4 +1,5 @@
-export default function CommanderDamage({ opponents, commanderDamage, onUpdate, onClose }) {
+export default function CommanderDamage({ opponents, commanderDamage, onUpdate, poison, onPoisonDelta, onClose }) {
+  const poisonLethal = poison >= 10
   return (
     <div className="cmd-dmg-overlay" onClick={onClose}>
       <div className="cmd-dmg-panel" onClick={(e) => e.stopPropagation()}>
@@ -29,6 +30,16 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
             })}
           </ul>
         )}
+
+        <div className="cmd-dmg-poison-row">
+          <span className="cmd-dmg-poison-label">☠ Poison counters</span>
+          <div className="cmd-dmg-controls">
+            <button onClick={() => onPoisonDelta(-1)} disabled={poison <= 0}>-1</button>
+            <span className={`cmd-dmg-value ${poisonLethal ? 'danger' : ''}`}>{poison}</span>
+            <button onClick={() => onPoisonDelta(1)}>+1</button>
+          </div>
+          {poisonLethal && <span className="eliminated-tag">ELIMINATED</span>}
+        </div>
       </div>
     </div>
   )

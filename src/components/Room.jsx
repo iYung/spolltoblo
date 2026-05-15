@@ -36,6 +36,7 @@ export default function Room({ roomId, playerName, password }) {
       [myId.current]: {
         life: DEFAULT_LIFE,
         commanderDamage: {},
+        poison: 0,
       },
     }))
   }, [])
@@ -142,7 +143,7 @@ export default function Room({ roomId, playerName, password }) {
           setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null, joinOrder: msg.joinOrder } }))
           setGameState((prev) => ({
             ...prev,
-            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {} },
+            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0 },
           }))
           // They will send us an offer — just prepare state
           break
@@ -200,6 +201,11 @@ export default function Room({ roomId, playerName, password }) {
                 commanderDamage: payload.commanderDamage,
               },
             }))
+          } else if (payload.type === 'poison-update') {
+            setGameState((prev) => ({
+              ...prev,
+              [msg.from]: { ...prev[msg.from], poison: payload.poison },
+            }))
           } else if (payload.type === 'card-pinned') {
             setRecentCards((prev) => [
               { card: payload.card, playerName: payload.playerName },
@@ -239,9 +245,20 @@ export default function Room({ roomId, playerName, password }) {
 
   function resetMyStats() {
     setGameState((prev) => {
-      const updated = { ...prev, [myId.current]: { life: DEFAULT_LIFE, commanderDamage: {} } }
+      const updated = { ...prev, [myId.current]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0 } }
       broadcastGameEvent({ type: 'life-update', life: DEFAULT_LIFE })
       broadcastGameEvent({ type: 'cmd-damage-update', commanderDamage: {} })
+      broadcastGameEvent({ type: 'poison-update', poison: 0 })
+      return updated
+    })
+  }
+
+  function updateMyPoison(delta) {
+    setGameState((prev) => {
+      const current = prev[myId.current]?.poison ?? 0
+      const poison = Math.max(0, current + delta)
+      const updated = { ...prev, [myId.current]: { ...prev[myId.current], poison } }
+      broadcastGameEvent({ type: 'poison-update', poison })
       return updated
     })
   }
@@ -289,7 +306,7 @@ export default function Room({ roomId, playerName, password }) {
     setTimeout(() => setCopyMsg(''), 2000)
   }
 
-  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {} }
+  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0 }
   const allPlayers = [
     { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
@@ -297,7 +314,7 @@ export default function Room({ roomId, playerName, password }) {
       name: peer.name ?? peerId,
       stream: peer.stream,
       isLocal: false,
-      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {} },
+      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0 },
       joinOrder: peer.joinOrder ?? Infinity,
     })),
   ].sort((a, b) => a.joinOrder - b.joinOrder)
@@ -353,6 +370,7 @@ export default function Room({ roomId, playerName, password }) {
           onLifeDelta={updateMyLife}
           onSetLife={setMyLife}
           onCommanderDamage={updateCommanderDamage}
+          onPoisonDelta={updateMyPoison}
           onReset={resetMyStats}
           volumes={volumes}
           rotations={rotations}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CommanderDamage from './CommanderDamage.jsx'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onReset, volume, rotated, onVolumeChange, onToggleRotate }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate }) {
   const videoRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
@@ -10,6 +10,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
   const { stream, name, state } = player
   const life = state?.life ?? 40
   const commanderDamage = state?.commanderDamage ?? {}
+  const poison = state?.poison ?? 0
 
   // Use addtrack listener so we re-attach when audio/video tracks arrive on the same
   // MediaStream object (reference doesn't change, so [stream] alone wouldn't re-fire).
@@ -35,7 +36,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
   }
 
   const totalCmdDmg = Object.values(commanderDamage).reduce((a, b) => a + b, 0)
-  const isEliminated = life <= 0 || Object.values(commanderDamage).some((d) => d >= 21)
+  const isEliminated = life <= 0 || Object.values(commanderDamage).some((d) => d >= 21) || poison >= 10
 
   return (
     <div className={`player-video ${isEliminated ? 'eliminated' : ''}`}>
@@ -88,13 +89,13 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           )}
         </div>
 
-        {isLocal && opponents.length > 0 && (
+        {isLocal && (
           <button
-            className={`cmd-btn ${totalCmdDmg > 0 ? 'has-damage' : ''}`}
+            className={`cmd-btn ${totalCmdDmg > 0 || poison > 0 ? 'has-damage' : ''}`}
             onClick={() => setShowCmdDmg(true)}
-            title="Commander damage"
+            title="Commander damage & poison"
           >
-            ⚔ {totalCmdDmg > 0 ? totalCmdDmg : 'CMD'}
+            ⚔ CMD
           </button>
         )}
 
@@ -132,6 +133,8 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           opponents={opponents}
           commanderDamage={commanderDamage}
           onUpdate={onCommanderDamage}
+          poison={poison}
+          onPoisonDelta={onPoisonDelta}
           onClose={() => setShowCmdDmg(false)}
         />
       )}
