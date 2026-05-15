@@ -280,6 +280,20 @@ html, body, #root {
 
 .rotate-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+.reset-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.reset-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+
 .volume-slider {
   width: 64px;
   opacity: 0;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CommanderDamage from './CommanderDamage.jsx'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, volume, rotated, onVolumeChange, onToggleRotate }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onReset, volume, rotated, onVolumeChange, onToggleRotate }) {
   const videoRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
@@ -91,7 +91,13 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           </button>
         )}
 
-        <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">↻</button>
+        {isLocal && (
+          <button className="reset-btn" onClick={onReset} title="Reset to 40 life, clear commander damage">
+            RESET LIFE
+          </button>
+        )}
+
+        <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">FLIP CAM</button>
 
         {!isLocal && (
           <input

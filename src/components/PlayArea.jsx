@@ -12,6 +12,7 @@ export default function PlayArea({
   onLifeDelta,
   onSetLife,
   onCommanderDamage,
+  onReset,
   volumes,
   rotations,
   onVolumeChange,
@@ -48,6 +49,7 @@ export default function PlayArea({
         onLifeDelta={onLifeDelta}
         onSetLife={onSetLife}
         onCommanderDamage={onCommanderDamage}
+        onReset={onReset}
         volumes={volumes}
         rotations={rotations}
         onVolumeChange={onVolumeChange}

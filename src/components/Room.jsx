@@ -206,6 +206,15 @@ export default function Room({ roomId, playerName }) {
     })
   }
 
+  function resetMyStats() {
+    setGameState((prev) => {
+      const updated = { ...prev, [myId.current]: { life: DEFAULT_LIFE, commanderDamage: {} } }
+      broadcastGameEvent({ type: 'life-update', life: DEFAULT_LIFE })
+      broadcastGameEvent({ type: 'cmd-damage-update', commanderDamage: {} })
+      return updated
+    })
+  }
+
   function updateCommanderDamage(fromPeerId, delta) {
     setGameState((prev) => {
       const current = prev[myId.current]?.commanderDamage ?? {}
@@ -290,6 +299,7 @@ export default function Room({ roomId, playerName }) {
           onLifeDelta={updateMyLife}
           onSetLife={setMyLife}
           onCommanderDamage={updateCommanderDamage}
+          onReset={resetMyStats}
           volumes={volumes}
           rotations={rotations}
           onVolumeChange={handleVolumeChange}
