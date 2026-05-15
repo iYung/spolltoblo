@@ -20,6 +20,8 @@ export default function Room({ roomId, playerName }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(320)
   const [copyMsg, setCopyMsg] = useState('')
+  const [volumes, setVolumes] = useState({})
+  const [rotations, setRotations] = useState({})
 
   // Initialize my own game state
   useEffect(() => {
@@ -229,6 +231,14 @@ export default function Room({ roomId, playerName }) {
     setPinnedCards((prev) => prev.map((p) => p.id === id ? { ...p, x, y } : p))
   }
 
+  function handleVolumeChange(peerId, value) {
+    setVolumes((prev) => ({ ...prev, [peerId]: value }))
+  }
+
+  function handleToggleRotate(peerId) {
+    setRotations((prev) => ({ ...prev, [peerId]: !prev[peerId] }))
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(window.location.href)
     setCopyMsg('Copied!')
@@ -252,22 +262,18 @@ export default function Room({ roomId, playerName }) {
   return (
     <div className="room">
       <div className="room-header">
-        <span className="room-title">SpellTable</span>
+        <span className="room-title">SpollToblo</span>
         <span className="room-id">Room: {roomId}</span>
+        {alone && (
+          <>
+            <span className="invite-inline-label">Share:</span>
+            <code className="invite-url-inline">{window.location.href}</code>
+          </>
+        )}
         <button className="btn-ghost" onClick={copyLink}>
           {copyMsg || 'Copy Link'}
         </button>
       </div>
-
-      {alone && (
-        <div className="invite-banner">
-          <span>Share this link with your friends to start playing:</span>
-          <code className="invite-url">{window.location.href}</code>
-          <button className="btn-primary invite-copy" onClick={copyLink}>
-            {copyMsg || 'Copy Link'}
-          </button>
-        </div>
-      )}
 
       <div className="room-body">
         <PlayArea
@@ -280,6 +286,10 @@ export default function Room({ roomId, playerName }) {
           onLifeDelta={updateMyLife}
           onSetLife={setMyLife}
           onCommanderDamage={updateCommanderDamage}
+          volumes={volumes}
+          rotations={rotations}
+          onVolumeChange={handleVolumeChange}
+          onToggleRotate={handleToggleRotate}
         />
 
         {sidebarOpen && (

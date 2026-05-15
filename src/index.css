@@ -116,7 +116,7 @@ html, body, #root {
 }
 
 .room-title { font-weight: 700; color: var(--accent); font-size: 16px; }
-.room-id { color: var(--text-muted); font-size: 12px; flex: 1; }
+.room-id { color: var(--text-muted); font-size: 12px; }
 
 .room-body {
   display: flex;
@@ -125,38 +125,25 @@ html, body, #root {
   position: relative;
 }
 
-/* ── Invite banner ───────────────────────────────────── */
-.invite-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  background: #1a2a1a;
-  border-bottom: 1px solid #2a4a2a;
+/* ── Inline invite (shown in header when alone) ──────── */
+.invite-inline-label {
   color: var(--text-muted);
-  font-size: 13px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.invite-url {
+.invite-url-inline {
   flex: 1;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 5px 10px;
-  font-size: 13px;
+  padding: 4px 8px;
+  font-size: 12px;
   color: var(--accent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-}
-
-.invite-copy {
-  padding: 6px 14px;
-  font-size: 13px;
-  flex-shrink: 0;
 }
 
 /* ── Play area ────────────────────────────────────────── */
@@ -278,6 +265,31 @@ html, body, #root {
 }
 
 .cmd-btn:hover, .cmd-btn.has-damage { border-color: var(--accent); color: var(--accent); }
+
+.rotate-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.rotate-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.volume-slider {
+  width: 64px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.player-video:hover .volume-slider { opacity: 1; }
 
 .eliminated-banner {
   position: absolute;

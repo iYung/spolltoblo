@@ -12,6 +12,10 @@ export default function PlayArea({
   onLifeDelta,
   onSetLife,
   onCommanderDamage,
+  volumes,
+  rotations,
+  onVolumeChange,
+  onToggleRotate,
 }) {
   const areaRef = useRef(null)
 
@@ -44,6 +48,10 @@ export default function PlayArea({
         onLifeDelta={onLifeDelta}
         onSetLife={onSetLife}
         onCommanderDamage={onCommanderDamage}
+        volumes={volumes}
+        rotations={rotations}
+        onVolumeChange={onVolumeChange}
+        onToggleRotate={onToggleRotate}
       />
 
       {pinnedCards.map((pin) => (

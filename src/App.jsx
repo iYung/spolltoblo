@@ -29,7 +29,7 @@ export default function App() {
     return (
       <div className="landing">
         <div className="landing-card">
-          <h1>SpellTable</h1>
+          <h1>SpollToblo</h1>
           <p>Play Magic: The Gathering over webcam with friends.</p>
           <input
             className="name-input"

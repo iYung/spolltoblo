@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CommanderDamage from './CommanderDamage.jsx'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, volume, rotated, onVolumeChange, onToggleRotate }) {
   const videoRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
@@ -15,7 +15,10 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
   // (audio and video tracks arrive separately on the same MediaStream object),
   // so we can't use [stream] as a dep and expect it to re-run for the video track.
   useEffect(() => {
-    if (videoRef.current) videoRef.current.srcObject = stream ?? null
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream ?? null
+      if (!isLocal) videoRef.current.volume = volume
+    }
   })
 
   function commitLifeEdit() {
@@ -36,7 +39,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         playsInline
         muted={isLocal}
         className="video-el"
-        style={{ display: stream ? 'block' : 'none' }}
+        style={{ display: stream ? 'block' : 'none', transform: rotated ? 'rotate(180deg)' : undefined }}
       />
       {!stream && (
         <div className="video-placeholder">
@@ -86,6 +89,24 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           >
             ⚔ {totalCmdDmg > 0 ? totalCmdDmg : 'CMD'}
           </button>
+        )}
+
+        <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">↻</button>
+
+        {!isLocal && (
+          <input
+            type="range"
+            className="volume-slider"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value)
+              onVolumeChange(v)
+              if (videoRef.current) videoRef.current.volume = v
+            }}
+          />
         )}
       </div>
 
