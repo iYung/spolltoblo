@@ -11,15 +11,22 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
   const life = state?.life ?? 40
   const commanderDamage = state?.commanderDamage ?? {}
 
-  // Run after every render — stream reference may not change between ontrack events
-  // (audio and video tracks arrive separately on the same MediaStream object),
-  // so we can't use [stream] as a dep and expect it to re-run for the video track.
+  // Use addtrack listener so we re-attach when audio/video tracks arrive on the same
+  // MediaStream object (reference doesn't change, so [stream] alone wouldn't re-fire).
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream ?? null
-      if (!isLocal) videoRef.current.volume = volume
+    if (!videoRef.current) return
+    videoRef.current.srcObject = stream ?? null
+    if (!stream) return
+    function onTrack() {
+      if (videoRef.current) videoRef.current.srcObject = stream
     }
-  })
+    stream.addEventListener('addtrack', onTrack)
+    return () => stream.removeEventListener('addtrack', onTrack)
+  }, [stream])
+
+  useEffect(() => {
+    if (videoRef.current && !isLocal) videoRef.current.volume = volume
+  }, [volume, isLocal])
 
   function commitLifeEdit() {
     const val = parseInt(lifeInput, 10)
