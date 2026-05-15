@@ -29,6 +29,13 @@ wss.on('connection', (ws) => {
 
     switch (msg.type) {
       case 'join': {
+        const secret = process.env.JOIN_SECRET
+        if (secret && msg.secret !== secret) {
+          ws.send(JSON.stringify({ type: 'error', reason: 'wrong-password' }))
+          ws.close()
+          return
+        }
+
         const { roomId, peerId } = msg
         currentRoom = roomId
         currentPeerId = peerId

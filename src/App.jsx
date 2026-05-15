@@ -6,6 +6,7 @@ export default function App() {
   const [roomId, setRoomId] = useState(null)
   const [playerName, setPlayerName] = useState('')
   const [nameInput, setNameInput] = useState('')
+  const [passwordInput, setPasswordInput] = useState('')
   const [joined, setJoined] = useState(false)
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function App() {
     setJoined(true)
   }
 
+
   if (!joined) {
     return (
       <div className="landing">
@@ -38,6 +40,14 @@ export default function App() {
             onChange={(e) => setNameInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && join()}
             autoFocus
+          />
+          <input
+            className="name-input"
+            placeholder="Password"
+            type="password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && join()}
           />
           {roomId ? (
             <button className="btn-primary" onClick={join}>Join Room</button>
@@ -54,5 +64,5 @@ export default function App() {
     )
   }
 
-  return <Room roomId={roomId} playerName={playerName} />
+  return <Room roomId={roomId} playerName={playerName} password={passwordInput} />
 }

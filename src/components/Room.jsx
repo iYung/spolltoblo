@@ -7,7 +7,7 @@ import PlayArea from './PlayArea.jsx'
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
 const DEFAULT_LIFE = 40
 
-export default function Room({ roomId, playerName }) {
+export default function Room({ roomId, playerName, password }) {
   const myId = useRef(generateId())
   const myJoinOrder = useRef(0)
   const wsRef = useRef(null)
@@ -23,6 +23,7 @@ export default function Room({ roomId, playerName }) {
   const [copyMsg, setCopyMsg] = useState('')
   const [volumes, setVolumes] = useState({})
   const [rotations, setRotations] = useState({})
+  const [authError, setAuthError] = useState(false)
 
   // Initialize my own game state
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function Room({ roomId, playerName }) {
     wsRef.current = ws
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'join', roomId, peerId: myId.current, name: playerName }))
+      ws.send(JSON.stringify({ type: 'join', roomId, peerId: myId.current, name: playerName, secret: password }))
     }
 
     ws.onmessage = async (event) => {
@@ -156,6 +157,11 @@ export default function Room({ roomId, playerName }) {
           delete pcsRef.current[msg.peerId]
           setPeers((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
           setGameState((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
+          break
+        }
+
+        case 'error': {
+          if (msg.reason === 'wrong-password') setAuthError(true)
           break
         }
 
@@ -271,6 +277,18 @@ export default function Room({ roomId, playerName }) {
   ].sort((a, b) => a.joinOrder - b.joinOrder)
 
   const alone = Object.keys(peers).length === 0
+
+  if (authError) {
+    return (
+      <div className="landing">
+        <div className="landing-card">
+          <h1>Wrong password</h1>
+          <p>The password you entered is incorrect.</p>
+          <button className="btn-primary" onClick={() => window.location.reload()}>Try again</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="room">
