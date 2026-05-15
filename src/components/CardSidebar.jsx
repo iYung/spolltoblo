@@ -20,8 +20,15 @@ export default function CardSidebar({ width, onWidthChange, onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [expanded, setExpanded] = useState(null)
+  const [hoveredCard, setHoveredCard] = useState(null)
+  const [hoverAnchor, setHoverAnchor] = useState(null)
   const debounceRef = useRef(null)
   const resizingRef = useRef(false)
+
+  function handleCardMouseEnter(e, card) {
+    setHoveredCard(card)
+    setHoverAnchor(e.currentTarget.getBoundingClientRect())
+  }
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return }
@@ -106,6 +113,8 @@ export default function CardSidebar({ width, onWidthChange, onClose }) {
               className="card-result"
               draggable
               onDragStart={(e) => dragCard(e, card)}
+              onMouseEnter={(e) => handleCardMouseEnter(e, card)}
+              onMouseLeave={() => setHoveredCard(null)}
             >
               <div className="card-result-header" onClick={() => setExpanded(isExpanded ? null : card.id)}>
                 <span className="card-name">{card.name}</span>
@@ -128,6 +137,20 @@ export default function CardSidebar({ width, onWidthChange, onClose }) {
           )
         })}
       </div>
+      {hoveredCard && cardImage(hoveredCard) && hoverAnchor && (
+        <div style={{
+          position: 'fixed',
+          top: hoverAnchor.top,
+          right: window.innerWidth - hoverAnchor.left + 8,
+          zIndex: 50,
+          lineHeight: 0,
+          borderRadius: 8,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          pointerEvents: 'none',
+        }}>
+          <img src={cardImage(hoveredCard)} alt={hoveredCard.name} style={{ width: 300, borderRadius: 8, display: 'block' }} />
+        </div>
+      )}
     </div>
   )
 }
