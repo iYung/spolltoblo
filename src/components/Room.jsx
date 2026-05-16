@@ -210,7 +210,7 @@ export default function Room({ roomId, playerName, password }) {
             setRecentCards((prev) => [
               { card: payload.card, playerName: payload.playerName },
               ...prev.filter((e) => e.card.id !== payload.card.id),
-            ].slice(0, 5))
+            ])
           }
           break
         }
@@ -289,7 +289,7 @@ export default function Room({ roomId, playerName, password }) {
     setRecentCards((prev) => [
       { card, playerName },
       ...prev.filter((e) => e.card.id !== card.id),
-    ].slice(0, 5))
+    ])
   }
 
   function unpinCard(id) {

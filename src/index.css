@@ -470,6 +470,7 @@ html, body, #root {
   border-radius: var(--radius);
   overflow: hidden;
   cursor: grab;
+  flex-shrink: 0;
   transition: border-color 0.15s;
 }
 
@@ -497,11 +498,13 @@ html, body, #root {
 }
 
 .sidebar-recent {
+  flex: 1;
   border-top: 1px solid var(--border);
   padding: 8px 8px 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow-y: auto;
 }
 
 .sidebar-recent-header {
