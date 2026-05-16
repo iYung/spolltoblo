@@ -17,10 +17,14 @@ export default function CardPin({ pin, areaRef, onRemove, onMove }) {
     setDragging(true)
     setHovered(false)
 
+    const rect = areaRef.current.getBoundingClientRect()
+    const offsetX = ((e.clientX - rect.left) / rect.width) * 100 - pin.x
+    const offsetY = ((e.clientY - rect.top) / rect.height) * 100 - pin.y
+
     function onMouseMove(ev) {
       const rect = areaRef.current.getBoundingClientRect()
-      const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100))
-      const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100))
+      const x = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100 - offsetX))
+      const y = Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100 - offsetY))
       onMove(pin.id, x, y)
     }
 
