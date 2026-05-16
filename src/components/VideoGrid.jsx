@@ -1,6 +1,6 @@
 import PlayerVideo from './PlayerVideo.jsx'
 
-export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volumes, rotations, onVolumeChange, onToggleRotate }) {
+export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volumes, rotations, onVolumeChange, onToggleRotate, onSetCommander }) {
   const count = players.length
 
   const gridStyle = {
@@ -27,6 +27,7 @@ export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCom
           rotated={rotations?.[player.peerId] ?? false}
           onVolumeChange={(v) => onVolumeChange(player.peerId, v)}
           onToggleRotate={() => onToggleRotate(player.peerId)}
+          onSetCommander={onSetCommander}
         />
       ))}
     </div>
