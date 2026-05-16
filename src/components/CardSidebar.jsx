@@ -9,7 +9,7 @@ function cardImage(card) {
 }
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [] }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -106,6 +106,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
             onDragStart={(e) => dragCard(e, card)}
             onMouseEnter={(e) => handleCardMouseEnter(e, card)}
             onMouseLeave={() => setHoveredCard(null)}
+            onClick={() => onCardSelect?.(card)}
           >
             <div className="card-result-header">
               <span className="card-name">{card.name}</span>

@@ -197,11 +197,11 @@ html, body, #root {
 
 .player-overlay {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
   padding: 8px 10px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  background: linear-gradient(rgba(0,0,0,0.85), transparent);
   display: flex;
   align-items: center;
   gap: 6px;

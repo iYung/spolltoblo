@@ -284,6 +284,14 @@ export default function Room({ roomId, playerName, password }) {
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
   }
 
+  function selectCard(card) {
+    broadcastGameEvent({ type: 'card-pinned', card, playerName })
+    setRecentCards((prev) => [
+      { card, playerName },
+      ...prev.filter((e) => e.card.id !== card.id),
+    ].slice(0, 5))
+  }
+
   function unpinCard(id) {
     setPinnedCards((prev) => prev.filter((p) => p.id !== id))
   }
@@ -384,6 +392,7 @@ export default function Room({ roomId, playerName, password }) {
             onWidthChange={setSidebarWidth}
             onClose={() => setSidebarOpen(false)}
             recentCards={recentCards}
+            onCardSelect={selectCard}
           />
         )}
 
