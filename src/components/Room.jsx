@@ -282,6 +282,10 @@ export default function Room({ roomId, playerName, password }) {
   function pinCard(card, x, y) {
     setPinnedCards((prev) => [...prev, { id: generateId(), card, x, y }])
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
+    setRecentCards((prev) => [
+      { card, playerName },
+      ...prev.filter((e) => e.card.id !== card.id),
+    ])
   }
 
   function selectCard(card) {
