@@ -9,16 +9,13 @@ function cardImage(card) {
 }
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [], onLoadDeck }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [] }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredCard, setHoveredCard] = useState(null)
   const [hoverAnchor, setHoverAnchor] = useState(null)
-  const [deckUrl, setDeckUrl] = useState('')
-  const [deckLoading, setDeckLoading] = useState(false)
-  const [deckError, setDeckError] = useState('')
   const [searchAll, setSearchAll] = useState(false)
   const debounceRef = useRef(null)
   const resizingRef = useRef(false)
@@ -55,24 +52,6 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
     return () => clearTimeout(debounceRef.current)
   }, [query, lobbyCards, searchAll])
 
-  async function handleLoadDeck() {
-    if (!deckUrl.trim() || !onLoadDeck) return
-    setDeckLoading(true)
-    setDeckError('')
-    try {
-      await onLoadDeck(deckUrl.trim())
-      setDeckUrl('')
-    } catch (err) {
-      const msg = err.message
-      if (msg === 'not-found') setDeckError('Deck not found. Is the URL correct?')
-      else if (msg === 'private') setDeckError('That deck is set to private.')
-      else if (msg === 'unknown-service') setDeckError('Paste an Archidekt URL.')
-      else setDeckError('Failed to load deck. Try again.')
-    } finally {
-      setDeckLoading(false)
-    }
-  }
-
   function startResize(e) {
     resizingRef.current = true
     const startX = e.clientX
@@ -104,22 +83,6 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       <div className="sidebar-header">
         <span>Card Search</span>
         <button className="close-btn" onClick={onClose}>✕</button>
-      </div>
-
-      <div className="sidebar-deck-loader">
-        <input
-          className="search-input"
-          placeholder="Paste Archidekt URL…"
-          value={deckUrl}
-          onChange={(e) => setDeckUrl(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLoadDeck()}
-          disabled={deckLoading}
-        />
-        <button className="btn-primary" onClick={handleLoadDeck} disabled={deckLoading || !deckUrl.trim()}>
-          {deckLoading ? 'Loading…' : 'Load'}
-        </button>
-        {deckError && <p className="sidebar-status error">{deckError}</p>}
-        {deck && <p className="sidebar-status muted">Deck: {deck.name}</p>}
       </div>
 
       <div className="sidebar-search">

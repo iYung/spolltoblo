@@ -443,6 +443,7 @@ export default function Room({ roomId, playerName, password }) {
           onVolumeChange={handleVolumeChange}
           onToggleRotate={handleToggleRotate}
           onSetCommander={setMyCommander}
+          onLoadDeck={loadDeck}
         />
 
         {sidebarOpen && (
@@ -454,7 +455,6 @@ export default function Room({ roomId, playerName, password }) {
             onCardSelect={selectCard}
             deck={myState.deck}
             lobbyCards={lobbyCards}
-            onLoadDeck={loadDeck}
           />
         )}
 

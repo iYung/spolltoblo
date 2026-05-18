@@ -8,13 +8,16 @@ function cardImage(card) {
   return null
 }
 
-export default function CommanderPicker({ onSelect, onClose }) {
+export default function CommanderPicker({ onSelect, onClose, onLoadDeck }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredCard, setHoveredCard] = useState(null)
   const [hoverAnchor, setHoverAnchor] = useState(null)
+  const [deckUrl, setDeckUrl] = useState('')
+  const [deckLoading, setDeckLoading] = useState(false)
+  const [deckError, setDeckError] = useState('')
   const debounceRef = useRef(null)
 
   useEffect(() => {
@@ -39,6 +42,24 @@ export default function CommanderPicker({ onSelect, onClose }) {
     return () => clearTimeout(debounceRef.current)
   }, [query])
 
+  async function handleLoadDeck() {
+    if (!deckUrl.trim() || !onLoadDeck) return
+    setDeckLoading(true)
+    setDeckError('')
+    try {
+      await onLoadDeck(deckUrl.trim())
+      onClose()
+    } catch (err) {
+      const msg = err.message
+      if (msg === 'not-found') setDeckError('Deck not found. Is the URL correct?')
+      else if (msg === 'private') setDeckError('That deck is set to private.')
+      else if (msg === 'unknown-service') setDeckError('Paste an Archidekt URL.')
+      else setDeckError('Failed to load deck. Try again.')
+    } finally {
+      setDeckLoading(false)
+    }
+  }
+
   return (
     <div className="cmd-dmg-overlay" onClick={onClose}>
       <div className="commander-picker-panel" onClick={(e) => e.stopPropagation()}>
@@ -47,12 +68,29 @@ export default function CommanderPicker({ onSelect, onClose }) {
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
+        <div className="commander-picker-deck-loader">
+          <input
+            className="search-input"
+            placeholder="Paste Archidekt URL to load deck…"
+            value={deckUrl}
+            onChange={(e) => setDeckUrl(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleLoadDeck()}
+            disabled={deckLoading}
+          />
+          <button className="btn-primary" onClick={handleLoadDeck} disabled={deckLoading || !deckUrl.trim()}>
+            {deckLoading ? 'Loading…' : 'Load'}
+          </button>
+          {deckError && <p className="sidebar-status error">{deckError}</p>}
+        </div>
+
+        <div className="commander-picker-divider">or search manually</div>
+
         <input
           className="search-input"
+          style={{ margin: '0 12px', width: 'calc(100% - 24px)' }}
           placeholder="Search commanders…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          autoFocus
         />
 
         <div className="commander-picker-results">
