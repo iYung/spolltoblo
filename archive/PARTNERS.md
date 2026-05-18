@@ -3,31 +3,31 @@
 ## Checklist
 
 ### Room.jsx
-- [ ] Change initial game state from `commander: null` to `commanders: []`
-- [ ] Replace `setMyCommander(card)` with `setMyCommanders(commanders)` (takes full array)
-- [ ] Update `resetMyStats` to clear `commanders: []`
-- [ ] Update `loadDeck` to build `commanders` array from `enriched.commander` + `enriched.partnerCommander` (filter nulls)
-- [ ] Update `peer-joined` sync to broadcast `commanders-update` with the full array
-- [ ] Rename `commander-update` game event handler to `commanders-update`, write array into state
-- [ ] Update `broadcastGameEvent` calls for commanders to send `{ type: 'commanders-update', commanders: [...] }`
+- [x] Change initial game state from `commander: null` to `commanders: []`
+- [x] Replace `setMyCommander(card)` with `setMyCommanders(commanders)` (takes full array)
+- [x] Update `resetMyStats` to clear `commanders: []`
+- [x] Update `loadDeck` to build `commanders` array from `enriched.commander` + `enriched.partnerCommander` (filter nulls)
+- [x] Update `peer-joined` sync to broadcast `commanders-update` with the full array
+- [x] Rename `commander-update` game event handler to `commanders-update`, write array into state
+- [x] Update `broadcastGameEvent` calls for commanders to send `{ type: 'commanders-update', commanders: [...] }`
 
 ### PlayerVideo.jsx
-- [ ] Read `commanders = state?.commanders ?? []` instead of `commander`
-- [ ] Update commander chip to show 0, 1, or 2 commanders per the display table in the design
-- [ ] Add `+ partner` button beside the chip when local player has exactly 1 commander
-- [ ] Add `×` remove button on each chip when local player has 2 commanders
-- [ ] Update hover preview to show both card images side by side when 2 commanders are set
-- [ ] Open `CommanderPicker` in `'primary'` or `'partner'` mode based on which slot is empty
-- [ ] Handle `onSelect` to write into the correct slot (index 0 or 1)
+- [x] Read `commanders = state?.commanders ?? []` instead of `commander`
+- [x] Update commander chip to show 0, 1, or 2 commanders per the display table in the design
+- [x] Add `+ partner` button beside the chip when local player has exactly 1 commander
+- [x] Add `×` remove button on each chip when local player has 2 commanders
+- [x] Update hover preview to show both card images side by side when 2 commanders are set
+- [x] Open `CommanderPicker` in `'primary'` or `'partner'` mode based on which slot is empty
+- [x] Handle `onSelect` to write into the correct slot (index 0 or 1)
 
 ### CommanderPicker.jsx
-- [ ] Add `mode` prop (`'primary'` | `'partner'`, default `'primary'`)
-- [ ] Update panel title to reflect mode ("Select Commander" vs "Add Partner Commander")
+- [x] Add `mode` prop (`'primary'` | `'partner'`, default `'primary'`)
+- [x] Update panel title to reflect mode ("Select Commander" vs "Add Partner Commander")
 
 ### CommanderDamage.jsx
-- [ ] Accept `opponents` as `[{ peerId, name, commanders: Card[] }]`
-- [ ] Render two labeled damage rows per opponent when they have 2 commanders
-- [ ] Use `${peerId}_2` as the damage key for the second commander row
+- [x] Accept `opponents` as `[{ peerId, name, commanders: Card[] }]`
+- [x] Render two labeled damage rows per opponent when they have 2 commanders
+- [x] Use `${peerId}_2` as the damage key for the second commander row
 
 ---
 

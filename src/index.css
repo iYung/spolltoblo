@@ -676,6 +676,14 @@ html, body, #root {
   color: #7ec850;
 }
 
+/* ── Commander bar (wraps chips + partner button) ─────── */
+.commander-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
 /* ── Commander chip (in player overlay) ───────────────── */
 .commander-chip {
   display: flex;
@@ -688,7 +696,12 @@ html, body, #root {
   max-width: 96px;
   min-width: 0;
   flex-shrink: 1;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: default;
 }
+
+button.commander-chip { cursor: pointer; }
 
 .commander-chip:hover { border-color: var(--accent); }
 
@@ -711,6 +724,18 @@ html, body, #root {
 
 .commander-chip-empty .commander-chip-label { color: var(--text-muted); }
 .commander-chip-empty:hover .commander-chip-label { color: var(--accent); }
+
+.commander-chip-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 1px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.commander-chip-remove:hover { color: var(--danger, #e55); }
 
 /* ── Commander picker modal ───────────────────────────── */
 .commander-picker-panel {

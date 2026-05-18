@@ -8,7 +8,7 @@ function cardImage(card) {
   return null
 }
 
-export default function CommanderPicker({ onSelect, onClose, onLoadDeck }) {
+export default function CommanderPicker({ onSelect, onClose, onLoadDeck, mode = 'primary' }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -64,7 +64,7 @@ export default function CommanderPicker({ onSelect, onClose, onLoadDeck }) {
     <div className="cmd-dmg-overlay" onClick={onClose}>
       <div className="commander-picker-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cmd-dmg-header">
-          <h3>Select Commander</h3>
+          <h3>{mode === 'partner' ? 'Add Partner Commander' : 'Select Commander'}</h3>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 

@@ -39,7 +39,7 @@ export default function Room({ roomId, playerName, password }) {
         life: DEFAULT_LIFE,
         commanderDamage: {},
         poison: 0,
-        commander: null,
+        commanders: [],
         deck: null,
       },
     }))
@@ -147,13 +147,13 @@ export default function Room({ roomId, playerName, password }) {
           setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null, joinOrder: msg.joinOrder } }))
           setGameState((prev) => ({
             ...prev,
-            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null },
+            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null },
           }))
           // Sync our current state so the new peer sees it
           const mine = gameStateRef.current[myId.current]
           if (mine) {
             broadcastGameEvent({ type: 'life-update', life: mine.life ?? DEFAULT_LIFE })
-            if (mine.commander) broadcastGameEvent({ type: 'commander-update', commander: mine.commander })
+            if (mine.commanders?.length) broadcastGameEvent({ type: 'commanders-update', commanders: mine.commanders })
             if (mine.deck) broadcastGameEvent({ type: 'deck-loaded', deckName: mine.deck.name, cards: mine.deck.cards })
           }
           break
@@ -216,10 +216,10 @@ export default function Room({ roomId, playerName, password }) {
               ...prev,
               [msg.from]: { ...prev[msg.from], poison: payload.poison },
             }))
-          } else if (payload.type === 'commander-update') {
+          } else if (payload.type === 'commanders-update') {
             setGameState((prev) => ({
               ...prev,
-              [msg.from]: { ...prev[msg.from], commander: payload.commander },
+              [msg.from]: { ...prev[msg.from], commanders: payload.commanders },
             }))
           } else if (payload.type === 'deck-loaded') {
             setGameState((prev) => ({
@@ -265,10 +265,11 @@ export default function Room({ roomId, playerName, password }) {
 
   function resetMyStats() {
     setGameState((prev) => {
-      const updated = { ...prev, [myId.current]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0 } }
+      const updated = { ...prev, [myId.current]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [] } }
       broadcastGameEvent({ type: 'life-update', life: DEFAULT_LIFE })
       broadcastGameEvent({ type: 'cmd-damage-update', commanderDamage: {} })
       broadcastGameEvent({ type: 'poison-update', poison: 0 })
+      broadcastGameEvent({ type: 'commanders-update', commanders: [] })
       return updated
     })
   }
@@ -283,10 +284,10 @@ export default function Room({ roomId, playerName, password }) {
     })
   }
 
-  function setMyCommander(card) {
+  function setMyCommanders(commanders) {
     setGameState((prev) => {
-      const updated = { ...prev, [myId.current]: { ...prev[myId.current], commander: card } }
-      broadcastGameEvent({ type: 'commander-update', commander: card })
+      const updated = { ...prev, [myId.current]: { ...prev[myId.current], commanders } }
+      broadcastGameEvent({ type: 'commanders-update', commanders })
       return updated
     })
   }
@@ -301,9 +302,8 @@ export default function Room({ roomId, playerName, password }) {
       [myId.current]: { ...prev[myId.current], deck: enriched },
     }))
     broadcastGameEvent({ type: 'deck-loaded', deckName: enriched.name, cards: enriched.cards })
-    if (enriched.commander) {
-      setMyCommander(enriched.commander)
-    }
+    const commanders = [enriched.commander, enriched.partnerCommander].filter(Boolean)
+    if (commanders.length) setMyCommanders(commanders)
   }
 
   function updateCommanderDamage(fromPeerId, delta) {
@@ -363,7 +363,7 @@ export default function Room({ roomId, playerName, password }) {
 
   gameStateRef.current = gameState
 
-  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null }
+  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null }
 
   const lobbyCards = useMemo(() => {
     const seen = new Set()
@@ -380,7 +380,7 @@ export default function Room({ roomId, playerName, password }) {
       name: peer.name ?? peerId,
       stream: peer.stream,
       isLocal: false,
-      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null },
+      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null },
       joinOrder: peer.joinOrder ?? Infinity,
     })),
   ].sort((a, b) => a.joinOrder - b.joinOrder)
@@ -442,7 +442,7 @@ export default function Room({ roomId, playerName, password }) {
           rotations={rotations}
           onVolumeChange={handleVolumeChange}
           onToggleRotate={handleToggleRotate}
-          onSetCommander={setMyCommander}
+          onSetCommanders={setMyCommanders}
           onLoadDeck={loadDeck}
         />
 
