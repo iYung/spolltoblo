@@ -19,6 +19,7 @@ export default function PlayArea({
   onVolumeChange,
   onToggleRotate,
   onSetCommander,
+  onLoadDeck,
 }) {
   const areaRef = useRef(null)
 
@@ -58,6 +59,7 @@ export default function PlayArea({
         onVolumeChange={onVolumeChange}
         onToggleRotate={onToggleRotate}
         onSetCommander={onSetCommander}
+        onLoadDeck={onLoadDeck}
       />
 
       {pinnedCards.map((pin) => (

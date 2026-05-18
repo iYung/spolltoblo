@@ -9,13 +9,14 @@ function cardImage(card) {
 }
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [] }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredCard, setHoveredCard] = useState(null)
   const [hoverAnchor, setHoverAnchor] = useState(null)
+  const [searchAll, setSearchAll] = useState(false)
   const debounceRef = useRef(null)
   const resizingRef = useRef(false)
 
@@ -25,6 +26,12 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
   }
 
   useEffect(() => {
+    if (lobbyCards.length > 0 && !searchAll) {
+      if (!query.trim()) { setResults([]); return }
+      const q = query.toLowerCase()
+      setResults(lobbyCards.filter((c) => c.name.toLowerCase().includes(q)))
+      return
+    }
     if (!query.trim()) { setResults([]); return }
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
@@ -43,7 +50,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       }
     }, 400)
     return () => clearTimeout(debounceRef.current)
-  }, [query])
+  }, [query, lobbyCards, searchAll])
 
   function startResize(e) {
     resizingRef.current = true
@@ -89,13 +96,24 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       </div>
 
       <div className="sidebar-results">
+        {lobbyCards.length > 0 && (
+          <div className="sidebar-deck-mode">
+            {searchAll
+              ? <span className="sidebar-status muted">Searching all cards</span>
+              : <span className="sidebar-status muted">Searching lobby decks</span>
+            }
+            <button className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px' }} onClick={() => setSearchAll((v) => !v)}>
+              {searchAll ? 'Back to decks' : 'Search all cards'}
+            </button>
+          </div>
+        )}
+        {lobbyCards.length === 0 && !query.trim() && (
+          <p className="sidebar-status muted">Load a deck URL to scope search to lobby decks.</p>
+        )}
         {loading && <p className="sidebar-status">Searching…</p>}
         {error && <p className="sidebar-status error">{error}</p>}
         {!loading && !error && results.length === 0 && query.trim() && (
           <p className="sidebar-status">No results.</p>
-        )}
-        {!loading && !error && results.length === 0 && !query.trim() && (
-          <p className="sidebar-status muted">Type a card name to search. Drag cards onto the board for quick reference.</p>
         )}
 
         {results.map((card) => (

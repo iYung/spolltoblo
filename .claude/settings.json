@@ -19,7 +19,15 @@
       "Bash(/Users/ivan/.local/share/mise/installs/node/24.14.0/bin/npm run *)",
       "Bash(ls /Users/ivan/.local/share/mise/installs/node/24.14.0/bin/)",
       "Read(//Users/ivan/.local/share/mise/installs/node/24.14.0/bin/**)",
-      "Bash(PATH=/Users/ivan/.local/share/mise/installs/node/24.14.0/bin:__TRACKED_VAR__ npm run build)"
+      "Bash(PATH=/Users/ivan/.local/share/mise/installs/node/24.14.0/bin:__TRACKED_VAR__ npm run build)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -H \"User-Agent: spolltoblo/1.0\" \"https://archidekt.com/api/decks/22516936/\")",
+      "Bash(curl -s -H \"User-Agent: spolltoblo/1.0\" \"https://archidekt.com/api/decks/22516936/\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); cards=d.get\\('cards',[]\\); print\\('cards count:', len\\(cards\\)\\); print\\('first card keys:', list\\(cards[0].keys\\(\\)\\) if cards else 'none'\\); print\\('first card:', json.dumps\\(cards[0], indent=2\\) if cards else 'none'\\)\")",
+      "Bash(curl -s -X POST \"https://api.scryfall.com/cards/collection\" -H \"Content-Type: application/json\" -d '{\"identifiers\":[{\"id\":\"c9f88a40-a6ed-4c1f-a309-011aca1acddd\"}]}')",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('status:', d.get\\('object'\\)\\); print\\('found:', [c['name'] for c in d.get\\('data',[]\\)]\\); print\\('not_found:', d.get\\('not_found',[]\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3001/api/deck?url=https%3A%2F%2Farchidekt.com%2Fdecks%2F22516936%2Fkutzil_slimes\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

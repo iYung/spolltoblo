@@ -441,6 +441,7 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+
 .sidebar-search {
   padding: 10px 10px 6px;
   flex-shrink: 0;
@@ -723,6 +724,44 @@ html, body, #root {
   flex-direction: column;
   gap: 12px;
 }
+
+.commander-picker-deck-loader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.commander-picker-deck-loader .search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.commander-picker-deck-loader .sidebar-status {
+  width: 100%;
+  margin: 0;
+  padding: 2px 0;
+}
+
+.commander-picker-divider {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  position: relative;
+}
+
+.commander-picker-divider::before,
+.commander-picker-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 30%;
+  height: 1px;
+  background: var(--border);
+}
+
+.commander-picker-divider::before { left: 0; }
+.commander-picker-divider::after { right: 0; }
 
 .commander-picker-results {
   flex: 1;

@@ -8,7 +8,7 @@ function cardImage(card) {
   return null
 }
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommander }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommander, onLoadDeck }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
@@ -190,6 +190,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         <CommanderPicker
           onSelect={(card) => { onSetCommander(card); setShowCommanderPicker(false) }}
           onClose={() => setShowCommanderPicker(false)}
+          onLoadDeck={onLoadDeck}
         />
       )}
     </div>
