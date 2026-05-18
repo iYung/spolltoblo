@@ -6,7 +6,7 @@ Players paste a Moxfield or Archidekt deck URL when they join. This auto-sets th
 
 ## User flow
 
-1. Player enters name and (optionally) a deck URL on the landing page, or loads one from the sidebar after joining.
+1. Player enters their name and joins. Once in the room, they paste a deck URL into the sidebar and hit Load.
 2. The server fetches the deck from Moxfield/Archidekt and returns normalized card data.
 3. The client batch-fetches full card details (image, mana cost, oracle text) from Scryfall.
 4. The player's commander is set automatically from the deck's commander slot.
@@ -151,6 +151,52 @@ If the deck has partner commanders, call `onSetCommander` with the primary comma
 | `src/components/CommanderPicker.jsx` | Minor: show auto-set commander as pre-selected (no commander change required in behaviour) |
 
 No new components required unless the deck-loading logic in `Room.jsx` grows large enough to extract into a `useDeck` hook.
+
+---
+
+## Checklist
+
+### Server proxy (`server/index.js`)
+- [ ] Add `GET /api/deck?url=` route
+- [ ] Detect service from URL (moxfield.com vs archidekt.com)
+- [ ] Extract Moxfield deck ID (slug after `/decks/`)
+- [ ] Extract Archidekt deck ID (numeric segment after `/decks/`)
+- [ ] Fetch from Moxfield API (`api2.moxfield.com/v2/decks/all/{id}`)
+- [ ] Fetch from Archidekt API (`archidekt.com/api/decks/{id}/`)
+- [ ] Normalize Moxfield response to shared format
+- [ ] Normalize Archidekt response to shared format
+- [ ] Return error JSON for unknown service, not-found, and private decks
+
+### Scryfall enrichment utility
+- [ ] Create `src/utils/enrichDeck.js` that accepts a normalized deck
+- [ ] Split card list into chunks of 75
+- [ ] POST each chunk to `https://api.scryfall.com/cards/collection`
+- [ ] Merge all responses into a single array of full Scryfall card objects
+- [ ] Return `{ name, commander, partnerCommander, cards }` with full Scryfall objects on `cards`
+
+### State (`Room.jsx`)
+- [ ] Add `deck: null` to the initial game state entry for the local player
+- [ ] Add `loadDeck(url)` async function: call `/api/deck`, then enrich, then `setGameState`
+- [ ] After deck loads, auto-call `setMyCommander` with the commander's Scryfall card object
+- [ ] Pass `deck` and `onLoadDeck` down to `CardSidebar`
+
+### Sidebar UI (`CardSidebar.jsx`)
+- [ ] Add deck URL text input at the top of the sidebar
+- [ ] Add Load button that calls `onLoadDeck(url)`
+- [ ] Show a loading indicator while fetching/enriching
+- [ ] Show an error message on failure (not-found, private, unknown-service)
+- [ ] Show deck name label once a deck is loaded (e.g. "Deck: Atraxa Superfriends")
+
+### Card search (`CardSidebar.jsx`)
+- [ ] Accept `deck` prop
+- [ ] When `deck` is loaded: filter `deck.cards` locally by name substring match
+- [ ] When `deck` is null: fall back to existing Scryfall debounced search (no change)
+- [ ] Show "Searching your deck" label when in deck mode
+- [ ] Add "Search all cards" toggle to override to Scryfall search even when a deck is loaded
+
+### Commander auto-set (`Room.jsx` + `CommanderPicker.jsx`)
+- [ ] On deck load, find the commander in the enriched cards array and call `setMyCommander`
+- [ ] `CommanderPicker` remains available for manual override / players without a deck
 
 ---
 
