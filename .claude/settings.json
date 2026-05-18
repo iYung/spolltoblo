@@ -27,7 +27,8 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('status:', d.get\\('object'\\)\\); print\\('found:', [c['name'] for c in d.get\\('data',[]\\)]\\); print\\('not_found:', d.get\\('not_found',[]\\)\\)\")",
       "Bash(curl -s \"http://localhost:3001/api/deck?url=https%3A%2F%2Farchidekt.com%2Fdecks%2F22516936%2Fkutzil_slimes\")",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(git checkout *)"
     ]
   }
 }

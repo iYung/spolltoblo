@@ -18,7 +18,7 @@ export default function PlayArea({
   rotations,
   onVolumeChange,
   onToggleRotate,
-  onSetCommander,
+  onSetCommanders,
   onLoadDeck,
 }) {
   const areaRef = useRef(null)
@@ -58,7 +58,7 @@ export default function PlayArea({
         rotations={rotations}
         onVolumeChange={onVolumeChange}
         onToggleRotate={onToggleRotate}
-        onSetCommander={onSetCommander}
+        onSetCommanders={onSetCommanders}
         onLoadDeck={onLoadDeck}
       />
 

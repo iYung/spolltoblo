@@ -13,20 +13,43 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
           <p className="cmd-dmg-empty">No opponents yet.</p>
         ) : (
           <ul className="cmd-dmg-list">
-            {opponents.map((opp) => {
-              const dmg = commanderDamage[opp.peerId] ?? 0
-              const atLimit = dmg >= 21
-              return (
-                <li key={opp.peerId} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
-                  <span className="opp-name">{opp.name}</span>
-                  <div className="cmd-dmg-controls">
-                    <button onClick={() => onUpdate(opp.peerId, -1)} disabled={dmg <= 0}>-1</button>
-                    <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
-                    <button onClick={() => onUpdate(opp.peerId, 1)}>+1</button>
-                  </div>
-                  {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
-                </li>
-              )
+            {opponents.flatMap((opp) => {
+              const oppCommanders = opp.state?.commanders ?? []
+              if (oppCommanders.length <= 1) {
+                const dmg = commanderDamage[opp.peerId] ?? 0
+                const atLimit = dmg >= 21
+                const label = oppCommanders.length === 1
+                  ? `${oppCommanders[0].name} (${opp.name})`
+                  : opp.name
+                return [(
+                  <li key={opp.peerId} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
+                    <span className="opp-name">{label}</span>
+                    <div className="cmd-dmg-controls">
+                      <button onClick={() => onUpdate(opp.peerId, -1)} disabled={dmg <= 0}>-1</button>
+                      <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
+                      <button onClick={() => onUpdate(opp.peerId, 1)}>+1</button>
+                    </div>
+                    {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
+                  </li>
+                )]
+              }
+              return oppCommanders.map((cmdr, i) => {
+                const key = i === 0 ? opp.peerId : `${opp.peerId}_2`
+                const dmg = commanderDamage[key] ?? 0
+                const atLimit = dmg >= 21
+                const label = `${cmdr.name} (${opp.name})`
+                return (
+                  <li key={key} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
+                    <span className="opp-name">{label}</span>
+                    <div className="cmd-dmg-controls">
+                      <button onClick={() => onUpdate(key, -1)} disabled={dmg <= 0}>-1</button>
+                      <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
+                      <button onClick={() => onUpdate(key, 1)}>+1</button>
+                    </div>
+                    {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
+                  </li>
+                )
+              })
             })}
           </ul>
         )}

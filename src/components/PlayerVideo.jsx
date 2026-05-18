@@ -8,20 +8,21 @@ function cardImage(card) {
   return null
 }
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommander, onLoadDeck }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
   const [showCmdDmg, setShowCmdDmg] = useState(false)
   const [showCommanderPicker, setShowCommanderPicker] = useState(false)
+  const [pickerMode, setPickerMode] = useState('primary')
   const [commanderHoverRect, setCommanderHoverRect] = useState(null)
 
   const { stream, name, state } = player
   const life = state?.life ?? 40
   const commanderDamage = state?.commanderDamage ?? {}
   const poison = state?.poison ?? 0
-  const commander = state?.commander ?? null
+  const commanders = state?.commanders ?? []
 
   // Use addtrack listener so we re-attach when audio/video tracks arrive on the same
   // MediaStream object (reference doesn't change, so [stream] alone wouldn't re-fire).
@@ -69,24 +70,43 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
       <div className="player-overlay">
         <span className="player-name">{name}</span>
 
-        {(commander || isLocal) && (
+        {(isLocal || commanders.length > 0) && (
           <div
             ref={commanderBarRef}
-            className={`commander-chip ${!commander ? 'commander-chip-empty' : ''}`}
+            className="commander-bar"
             onMouseEnter={() => { if (commanderBarRef.current) setCommanderHoverRect(commanderBarRef.current.getBoundingClientRect()) }}
             onMouseLeave={() => setCommanderHoverRect(null)}
-            onClick={isLocal ? () => setShowCommanderPicker(true) : undefined}
-            style={isLocal ? { cursor: 'pointer' } : undefined}
-            title={commander ? commander.name : 'Set commander'}
           >
-            {commander ? (
-              <>
-                <span className="commander-chip-label">CMDR</span>
-                <span className="commander-chip-name">{commander.name}</span>
-              </>
-            ) : (
-              <span className="commander-chip-label">+CMDR</span>
-            )}
+            {[0, 1].map((i) => {
+              const cmdr = commanders[i]
+              const mode = i === 0 ? 'primary' : 'partner'
+              const label = i === 0 ? '+CMDR' : '+PARTNER'
+              if (!isLocal && !cmdr) return null
+              return cmdr ? (
+                <div key={i} className="commander-chip" title={cmdr.name}>
+                  <span className="commander-chip-label">CMDR</span>
+                  <span className="commander-chip-name">{cmdr.name}</span>
+                  {isLocal && (
+                    <button
+                      className="commander-chip-remove"
+                      onClick={(e) => { e.stopPropagation(); onSetCommanders(commanders.filter((_, j) => j !== i)) }}
+                      title="Remove"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  key={i}
+                  className="commander-chip commander-chip-empty"
+                  onClick={() => { setPickerMode(mode); setShowCommanderPicker(true) }}
+                  title={label}
+                >
+                  <span className="commander-chip-label">{label}</span>
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -171,7 +191,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         />
       )}
 
-      {commanderHoverRect && commander && cardImage(commander) && (
+      {commanderHoverRect && commanders.length > 0 && commanders.some(c => cardImage(c)) && (
         <div style={{
           position: 'fixed',
           top: commanderHoverRect.bottom + 6,
@@ -181,14 +201,28 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           borderRadius: 8,
           boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           pointerEvents: 'none',
+          display: 'flex',
+          gap: 8,
         }}>
-          <img src={cardImage(commander)} alt={commander.name} style={{ width: 300, borderRadius: 8, display: 'block' }} />
+          {commanders.map((cmdr, i) => {
+            const img = cardImage(cmdr)
+            return img ? (
+              <img key={i} src={img} alt={cmdr.name} style={{ width: commanders.length > 1 ? 180 : 300, borderRadius: 8, display: 'block' }} />
+            ) : null
+          })}
         </div>
       )}
 
       {showCommanderPicker && (
         <CommanderPicker
-          onSelect={(card) => { onSetCommander(card); setShowCommanderPicker(false) }}
+          mode={pickerMode}
+          onSelect={(card) => {
+            const updated = pickerMode === 'primary'
+              ? [card, ...commanders.slice(1)]
+              : [commanders[0], card]
+            onSetCommanders(updated.filter(Boolean))
+            setShowCommanderPicker(false)
+          }}
           onClose={() => setShowCommanderPicker(false)}
           onLoadDeck={onLoadDeck}
         />
