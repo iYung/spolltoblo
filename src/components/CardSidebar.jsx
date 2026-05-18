@@ -9,13 +9,17 @@ function cardImage(card) {
 }
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, onLoadDeck }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredCard, setHoveredCard] = useState(null)
   const [hoverAnchor, setHoverAnchor] = useState(null)
+  const [deckUrl, setDeckUrl] = useState('')
+  const [deckLoading, setDeckLoading] = useState(false)
+  const [deckError, setDeckError] = useState('')
+  const [searchAll, setSearchAll] = useState(false)
   const debounceRef = useRef(null)
   const resizingRef = useRef(false)
 
@@ -25,6 +29,12 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
   }
 
   useEffect(() => {
+    if (deck && !searchAll) {
+      if (!query.trim()) { setResults([]); return }
+      const q = query.toLowerCase()
+      setResults(deck.cards.filter((c) => c.name.toLowerCase().includes(q)))
+      return
+    }
     if (!query.trim()) { setResults([]); return }
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
@@ -43,7 +53,25 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       }
     }, 400)
     return () => clearTimeout(debounceRef.current)
-  }, [query])
+  }, [query, deck, searchAll])
+
+  async function handleLoadDeck() {
+    if (!deckUrl.trim() || !onLoadDeck) return
+    setDeckLoading(true)
+    setDeckError('')
+    try {
+      await onLoadDeck(deckUrl.trim())
+      setDeckUrl('')
+    } catch (err) {
+      const msg = err.message
+      if (msg === 'not-found') setDeckError('Deck not found. Is the URL correct?')
+      else if (msg === 'private') setDeckError('That deck is set to private.')
+      else if (msg === 'unknown-service') setDeckError('Paste a Moxfield or Archidekt URL.')
+      else setDeckError('Failed to load deck. Try again.')
+    } finally {
+      setDeckLoading(false)
+    }
+  }
 
   function startResize(e) {
     resizingRef.current = true
@@ -78,6 +106,22 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
         <button className="close-btn" onClick={onClose}>✕</button>
       </div>
 
+      <div className="sidebar-deck-loader">
+        <input
+          className="search-input"
+          placeholder="Paste Moxfield or Archidekt URL…"
+          value={deckUrl}
+          onChange={(e) => setDeckUrl(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLoadDeck()}
+          disabled={deckLoading}
+        />
+        <button className="btn-primary" onClick={handleLoadDeck} disabled={deckLoading || !deckUrl.trim()}>
+          {deckLoading ? 'Loading…' : 'Load'}
+        </button>
+        {deckError && <p className="sidebar-status error">{deckError}</p>}
+        {deck && <p className="sidebar-status muted">Deck: {deck.name}</p>}
+      </div>
+
       <div className="sidebar-search">
         <input
           className="search-input"
@@ -89,13 +133,24 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       </div>
 
       <div className="sidebar-results">
+        {deck && (
+          <div className="sidebar-deck-mode">
+            {searchAll
+              ? <span className="sidebar-status muted">Searching all cards</span>
+              : <span className="sidebar-status muted">Searching your deck · {deck.name}</span>
+            }
+            <button className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px' }} onClick={() => setSearchAll((v) => !v)}>
+              {searchAll ? 'Back to deck' : 'Search all cards'}
+            </button>
+          </div>
+        )}
+        {!deck && !query.trim() && (
+          <p className="sidebar-status muted">Load a deck URL to scope search to your cards.</p>
+        )}
         {loading && <p className="sidebar-status">Searching…</p>}
         {error && <p className="sidebar-status error">{error}</p>}
         {!loading && !error && results.length === 0 && query.trim() && (
           <p className="sidebar-status">No results.</p>
-        )}
-        {!loading && !error && results.length === 0 && !query.trim() && (
-          <p className="sidebar-status muted">Type a card name to search. Drag cards onto the board for quick reference.</p>
         )}
 
         {results.map((card) => (

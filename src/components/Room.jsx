@@ -4,6 +4,7 @@ import VideoGrid from './VideoGrid.jsx'
 import CardSidebar from './CardSidebar.jsx'
 import PlayArea from './PlayArea.jsx'
 import DeviceSelector from './DeviceSelector.jsx'
+import { enrichDeck } from '../utils/enrichDeck.js'
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
 const DEFAULT_LIFE = 40
@@ -38,6 +39,7 @@ export default function Room({ roomId, playerName, password }) {
         commanderDamage: {},
         poison: 0,
         commander: null,
+        deck: null,
       },
     }))
   }, [])
@@ -144,7 +146,7 @@ export default function Room({ roomId, playerName, password }) {
           setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null, joinOrder: msg.joinOrder } }))
           setGameState((prev) => ({
             ...prev,
-            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null },
+            [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null },
           }))
           // They will send us an offer — just prepare state
           break
@@ -277,6 +279,20 @@ export default function Room({ roomId, playerName, password }) {
     })
   }
 
+  async function loadDeck(url) {
+    const res = await fetch(`/api/deck?url=${encodeURIComponent(url)}`)
+    const normalized = await res.json()
+    if (normalized.error) throw new Error(normalized.error)
+    const enriched = await enrichDeck(normalized)
+    setGameState((prev) => ({
+      ...prev,
+      [myId.current]: { ...prev[myId.current], deck: enriched },
+    }))
+    if (enriched.commander) {
+      setMyCommander(enriched.commander)
+    }
+  }
+
   function updateCommanderDamage(fromPeerId, delta) {
     setGameState((prev) => {
       const current = prev[myId.current]?.commanderDamage ?? {}
@@ -332,7 +348,7 @@ export default function Room({ roomId, playerName, password }) {
     setTimeout(() => setCopyMsg(''), 2000)
   }
 
-  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null }
+  const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null }
   const allPlayers = [
     { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
@@ -340,7 +356,7 @@ export default function Room({ roomId, playerName, password }) {
       name: peer.name ?? peerId,
       stream: peer.stream,
       isLocal: false,
-      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null },
+      state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null },
       joinOrder: peer.joinOrder ?? Infinity,
     })),
   ].sort((a, b) => a.joinOrder - b.joinOrder)
@@ -412,6 +428,8 @@ export default function Room({ roomId, playerName, password }) {
             onClose={() => setSidebarOpen(false)}
             recentCards={recentCards}
             onCardSelect={selectCard}
+            deck={myState.deck}
+            onLoadDeck={loadDeck}
           />
         )}
 

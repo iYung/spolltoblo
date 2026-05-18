@@ -24,6 +24,7 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Webcam streaming** — low-latency peer-to-peer video via WebRTC, no server relay
 - **Card search** — resizable right sidebar powered by the Scryfall API; search any Magic card by name
 - **Card pins** — drag a card from the sidebar onto the board; hover the chip to read its details; grab the `⠿` handle to reposition it
+- **Deck loading** — paste a Moxfield or Archidekt URL to load your deck; card search scopes to your cards instantly with no API calls; auto-sets your commander
 - **Life tracking** — click your life total to edit it directly; use +1 / -1 / +5 / -5 buttons; syncs to all players in real time
 - **Commander damage** — track damage from each opponent's commander separately; highlights at 21 (elimination threshold)
 - **Shareable rooms** — room lives in the URL; no sign-up required
