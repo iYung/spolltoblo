@@ -1,6 +1,6 @@
 # Decklists Feature
 
-Players paste a Moxfield or Archidekt deck URL when they join. This auto-sets their commander and scopes card search to only their deck — no more searching all of Scryfall.
+Players paste an Archidekt deck URL when they join. This auto-sets their commander and scopes card search to all lobby decks — no more searching all of Scryfall.
 
 ---
 

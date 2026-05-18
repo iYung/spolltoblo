@@ -9,7 +9,7 @@ function cardImage(card) {
 }
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, onLoadDeck }) {
+export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [], onLoadDeck }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -29,10 +29,10 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
   }
 
   useEffect(() => {
-    if (deck && !searchAll) {
+    if (lobbyCards.length > 0 && !searchAll) {
       if (!query.trim()) { setResults([]); return }
       const q = query.toLowerCase()
-      setResults(deck.cards.filter((c) => c.name.toLowerCase().includes(q)))
+      setResults(lobbyCards.filter((c) => c.name.toLowerCase().includes(q)))
       return
     }
     if (!query.trim()) { setResults([]); return }
@@ -53,7 +53,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       }
     }, 400)
     return () => clearTimeout(debounceRef.current)
-  }, [query, deck, searchAll])
+  }, [query, lobbyCards, searchAll])
 
   async function handleLoadDeck() {
     if (!deckUrl.trim() || !onLoadDeck) return
@@ -66,7 +66,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       const msg = err.message
       if (msg === 'not-found') setDeckError('Deck not found. Is the URL correct?')
       else if (msg === 'private') setDeckError('That deck is set to private.')
-      else if (msg === 'unknown-service') setDeckError('Paste a Moxfield or Archidekt URL.')
+      else if (msg === 'unknown-service') setDeckError('Paste an Archidekt URL.')
       else setDeckError('Failed to load deck. Try again.')
     } finally {
       setDeckLoading(false)
@@ -109,7 +109,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       <div className="sidebar-deck-loader">
         <input
           className="search-input"
-          placeholder="Paste Moxfield or Archidekt URL…"
+          placeholder="Paste Archidekt URL…"
           value={deckUrl}
           onChange={(e) => setDeckUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLoadDeck()}
@@ -133,19 +133,19 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
       </div>
 
       <div className="sidebar-results">
-        {deck && (
+        {lobbyCards.length > 0 && (
           <div className="sidebar-deck-mode">
             {searchAll
               ? <span className="sidebar-status muted">Searching all cards</span>
-              : <span className="sidebar-status muted">Searching your deck · {deck.name}</span>
+              : <span className="sidebar-status muted">Searching lobby decks</span>
             }
             <button className="btn-ghost" style={{ fontSize: '0.75rem', padding: '2px 6px' }} onClick={() => setSearchAll((v) => !v)}>
-              {searchAll ? 'Back to deck' : 'Search all cards'}
+              {searchAll ? 'Back to decks' : 'Search all cards'}
             </button>
           </div>
         )}
-        {!deck && !query.trim() && (
-          <p className="sidebar-status muted">Load a deck URL to scope search to your cards.</p>
+        {lobbyCards.length === 0 && !query.trim() && (
+          <p className="sidebar-status muted">Load a deck URL to scope search to lobby decks.</p>
         )}
         {loading && <p className="sidebar-status">Searching…</p>}
         {error && <p className="sidebar-status error">{error}</p>}

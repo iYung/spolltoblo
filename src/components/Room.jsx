@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { generateId } from '../utils/id.js'
 import VideoGrid from './VideoGrid.jsx'
 import CardSidebar from './CardSidebar.jsx'
@@ -15,6 +15,7 @@ export default function Room({ roomId, playerName, password }) {
   const wsRef = useRef(null)
   const pcsRef = useRef({}) // peerId -> RTCPeerConnection
   const localStreamRef = useRef(null)
+  const gameStateRef = useRef({})
 
   const [localStream, setLocalStream] = useState(null)
   const [peers, setPeers] = useState({}) // peerId -> { stream, name }
@@ -148,7 +149,13 @@ export default function Room({ roomId, playerName, password }) {
             ...prev,
             [msg.peerId]: { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null },
           }))
-          // They will send us an offer — just prepare state
+          // Sync our current state so the new peer sees it
+          const mine = gameStateRef.current[myId.current]
+          if (mine) {
+            broadcastGameEvent({ type: 'life-update', life: mine.life ?? DEFAULT_LIFE })
+            if (mine.commander) broadcastGameEvent({ type: 'commander-update', commander: mine.commander })
+            if (mine.deck) broadcastGameEvent({ type: 'deck-loaded', deckName: mine.deck.name, cards: mine.deck.cards })
+          }
           break
         }
 
@@ -213,6 +220,11 @@ export default function Room({ roomId, playerName, password }) {
             setGameState((prev) => ({
               ...prev,
               [msg.from]: { ...prev[msg.from], commander: payload.commander },
+            }))
+          } else if (payload.type === 'deck-loaded') {
+            setGameState((prev) => ({
+              ...prev,
+              [msg.from]: { ...prev[msg.from], deck: { name: payload.deckName, cards: payload.cards } },
             }))
           } else if (payload.type === 'card-pinned') {
             setRecentCards((prev) => [
@@ -288,6 +300,7 @@ export default function Room({ roomId, playerName, password }) {
       ...prev,
       [myId.current]: { ...prev[myId.current], deck: enriched },
     }))
+    broadcastGameEvent({ type: 'deck-loaded', deckName: enriched.name, cards: enriched.cards })
     if (enriched.commander) {
       setMyCommander(enriched.commander)
     }
@@ -348,7 +361,18 @@ export default function Room({ roomId, playerName, password }) {
     setTimeout(() => setCopyMsg(''), 2000)
   }
 
+  gameStateRef.current = gameState
+
   const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commander: null, deck: null }
+
+  const lobbyCards = useMemo(() => {
+    const seen = new Set()
+    return Object.values(gameState).flatMap(s => s.deck?.cards ?? []).filter(c => {
+      if (seen.has(c.id)) return false
+      seen.add(c.id)
+      return true
+    })
+  }, [gameState])
   const allPlayers = [
     { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
@@ -429,6 +453,7 @@ export default function Room({ roomId, playerName, password }) {
             recentCards={recentCards}
             onCardSelect={selectCard}
             deck={myState.deck}
+            lobbyCards={lobbyCards}
             onLoadDeck={loadDeck}
           />
         )}

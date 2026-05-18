@@ -22,28 +22,6 @@ app.get('/api/deck', async (req, res) => {
   if (deckIdx === -1) return res.status(400).json({ error: 'unknown-service' })
 
   try {
-    if (host === 'moxfield.com') {
-      const deckId = segments[deckIdx + 1]
-      if (!deckId) return res.status(400).json({ error: 'not-found' })
-      const upstream = await fetch(`https://api2.moxfield.com/v2/decks/all/${deckId}`, {
-        headers: { 'User-Agent': 'spolltoblo/1.0' },
-      })
-      if (upstream.status === 404) return res.json({ error: 'not-found' })
-      if (upstream.status === 401 || upstream.status === 403) return res.json({ error: 'private' })
-      if (!upstream.ok) return res.status(500).json({ error: 'fetch-failed' })
-      const data = await upstream.json()
-
-      const commanders = Object.values(data.boards?.commanders?.cards ?? {})
-      const mainboard = Object.values(data.boards?.mainboard?.cards ?? {})
-
-      return res.json({
-        name: data.name ?? 'Unknown Deck',
-        commander: commanders[0] ? { name: commanders[0].card.name, scryfallId: commanders[0].card.scryfall_id } : null,
-        partnerCommander: commanders[1] ? { name: commanders[1].card.name, scryfallId: commanders[1].card.scryfall_id } : null,
-        cards: mainboard.map((e) => ({ name: e.card.name, scryfallId: e.card.scryfall_id, quantity: e.quantity })),
-      })
-    }
-
     if (host === 'archidekt.com') {
       const deckId = segments[deckIdx + 1]
       if (!deckId) return res.status(400).json({ error: 'not-found' })
