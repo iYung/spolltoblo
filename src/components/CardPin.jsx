@@ -1,16 +1,9 @@
 import { useState } from 'react'
-
-function cardImage(card) {
-  if (card.image_uris?.normal) return card.image_uris.normal
-  if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
-  return null
-}
-
+import { cardImages } from '../utils/cardImages.js'
 
 export default function CardPin({ pin, areaRef, onRemove, onMove }) {
   const [hovered, setHovered] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const img = cardImage(pin.card)
 
   function handleDragHandleMouseDown(e) {
     e.preventDefault()
@@ -67,9 +60,13 @@ export default function CardPin({ pin, areaRef, onRemove, onMove }) {
         <button className="card-pin-remove" onClick={onRemove}>✕</button>
       </div>
 
-      {hovered && !dragging && img && (
+      {hovered && !dragging && cardImages(pin.card).length > 0 && (
         <div className="card-pin-popup" style={popupStyle}>
-          <img src={img} alt={pin.card.name} className="card-popup-img" />
+          <div style={{ display: 'flex', gap: 8 }}>
+            {cardImages(pin.card).map((url, i) => (
+              <img key={i} src={url} alt={pin.card.name} className="card-popup-img" />
+            ))}
+          </div>
         </div>
       )}
     </div>
