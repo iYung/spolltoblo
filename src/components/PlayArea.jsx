@@ -20,6 +20,10 @@ export default function PlayArea({
   onToggleRotate,
   onSetCommanders,
   onLoadDeck,
+  isMuted,
+  isVideoHidden,
+  onToggleMute,
+  onToggleVideo,
 }) {
   const areaRef = useRef(null)
 
@@ -60,6 +64,10 @@ export default function PlayArea({
         onToggleRotate={onToggleRotate}
         onSetCommanders={onSetCommanders}
         onLoadDeck={onLoadDeck}
+        isMuted={isMuted}
+        isVideoHidden={isVideoHidden}
+        onToggleMute={onToggleMute}
+        onToggleVideo={onToggleVideo}
       />
 
       {pinnedCards.map((pin) => (

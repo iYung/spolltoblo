@@ -3,7 +3,7 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
@@ -54,9 +54,14 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         playsInline
         muted={isLocal}
         className="video-el"
-        style={{ display: stream ? 'block' : 'none', transform: rotated ? 'rotate(180deg)' : undefined }}
+        style={{ display: (stream && !(isLocal && isVideoHidden)) ? 'block' : 'none', transform: rotated ? 'rotate(180deg)' : undefined }}
       />
       {!stream && (
+        <div className="video-placeholder">
+          <span>{name?.[0]?.toUpperCase() ?? '?'}</span>
+        </div>
+      )}
+      {isLocal && isVideoHidden && stream && (
         <div className="video-placeholder">
           <span>{name?.[0]?.toUpperCase() ?? '?'}</span>
         </div>
@@ -150,6 +155,25 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           <button className="reset-btn" onClick={onReset} title="Reset to 40 life, clear commander damage">
             RESET
           </button>
+        )}
+
+        {isLocal && (
+          <>
+            <button
+              className={`mute-btn${isMuted ? ' active' : ''}`}
+              onClick={onToggleMute}
+              title="Toggle microphone"
+            >
+              MUTE
+            </button>
+            <button
+              className={`cam-btn${isVideoHidden ? ' active' : ''}`}
+              onClick={onToggleVideo}
+              title="Toggle camera"
+            >
+              CAM
+            </button>
+          </>
         )}
 
         <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">FLIP CAM</button>
