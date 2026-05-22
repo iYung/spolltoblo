@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
-
-function cardImage(card) {
-  if (card.image_uris?.normal) return card.image_uris.normal
-  if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
-  return null
-}
+import { cardImages } from '../utils/cardImages.js'
 
 export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo }) {
   const videoRef = useRef(null)
@@ -215,7 +210,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         />
       )}
 
-      {commanderHoverRect && commanders.length > 0 && commanders.some(c => cardImage(c)) && (
+      {commanderHoverRect && commanders.length > 0 && commanders.some(c => cardImages(c).length > 0) && (
         <div style={{
           position: 'fixed',
           top: commanderHoverRect.bottom + 6,
@@ -228,12 +223,12 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           display: 'flex',
           gap: 8,
         }}>
-          {commanders.map((cmdr, i) => {
-            const img = cardImage(cmdr)
-            return img ? (
-              <img key={i} src={img} alt={cmdr.name} style={{ width: commanders.length > 1 ? 180 : 300, borderRadius: 8, display: 'block' }} />
-            ) : null
-          })}
+          {(() => {
+            const allImgs = commanders.flatMap(c => cardImages(c).map(url => ({ url, name: c.name })))
+            return allImgs.map((entry, i) => (
+              <img key={i} src={entry.url} alt={entry.name} style={{ width: allImgs.length > 1 ? 180 : 300, borderRadius: 8, display: 'block' }} />
+            ))
+          })()}
         </div>
       )}
 

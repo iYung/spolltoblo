@@ -1,12 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import { cardImages } from '../utils/cardImages.js'
 
 const SCRYFALL_SEARCH = 'https://api.scryfall.com/cards/search'
-
-function cardImage(card) {
-  if (card.image_uris?.normal) return card.image_uris.normal
-  if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
-  return null
-}
 
 export default function CommanderPicker({ onSelect, onClose, onLoadDeck, mode = 'primary' }) {
   const [query, setQuery] = useState('')
@@ -120,7 +115,7 @@ export default function CommanderPicker({ onSelect, onClose, onLoadDeck, mode = 
           ))}
         </div>
 
-        {hoveredCard && cardImage(hoveredCard) && hoverAnchor && (
+        {hoveredCard && cardImages(hoveredCard).length > 0 && hoverAnchor && (
           <div style={{
             position: 'fixed',
             top: Math.min(hoverAnchor.top, window.innerHeight - 420),
@@ -131,7 +126,11 @@ export default function CommanderPicker({ onSelect, onClose, onLoadDeck, mode = 
             boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
             pointerEvents: 'none',
           }}>
-            <img src={cardImage(hoveredCard)} alt={hoveredCard.name} style={{ width: 240, borderRadius: 8, display: 'block' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              {cardImages(hoveredCard).map((url, i) => (
+                <img key={i} src={url} alt={hoveredCard.name} style={{ width: 240, borderRadius: 8, display: 'block' }} />
+              ))}
+            </div>
           </div>
         )}
       </div>

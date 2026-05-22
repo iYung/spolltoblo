@@ -317,11 +317,13 @@ export default function Room({ roomId, playerName, password }) {
         ...current,
         [fromPeerId]: (current[fromPeerId] ?? 0) + delta,
       }
+      const life = (prev[myId.current]?.life ?? DEFAULT_LIFE) - delta
       const updated = {
         ...prev,
-        [myId.current]: { ...prev[myId.current], commanderDamage },
+        [myId.current]: { ...prev[myId.current], commanderDamage, life },
       }
       broadcastGameEvent({ type: 'cmd-damage-update', commanderDamage })
+      broadcastGameEvent({ type: 'life-update', life })
       return updated
     })
   }

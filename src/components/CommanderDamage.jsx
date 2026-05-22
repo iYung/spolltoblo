@@ -25,9 +25,11 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
                   <li key={opp.peerId} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
                     <span className="opp-name">{label}</span>
                     <div className="cmd-dmg-controls">
+                      <button onClick={() => onUpdate(opp.peerId, -5)} disabled={dmg <= 0}>-5</button>
                       <button onClick={() => onUpdate(opp.peerId, -1)} disabled={dmg <= 0}>-1</button>
                       <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
                       <button onClick={() => onUpdate(opp.peerId, 1)}>+1</button>
+                      <button onClick={() => onUpdate(opp.peerId, 5)}>+5</button>
                     </div>
                     {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
                   </li>
@@ -42,9 +44,11 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
                   <li key={key} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
                     <span className="opp-name">{label}</span>
                     <div className="cmd-dmg-controls">
+                      <button onClick={() => onUpdate(key, -5)} disabled={dmg <= 0}>-5</button>
                       <button onClick={() => onUpdate(key, -1)} disabled={dmg <= 0}>-1</button>
                       <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
                       <button onClick={() => onUpdate(key, 1)}>+1</button>
+                      <button onClick={() => onUpdate(key, 5)}>+5</button>
                     </div>
                     {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
                   </li>

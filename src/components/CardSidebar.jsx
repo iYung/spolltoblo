@@ -1,12 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
+import { cardImages } from '../utils/cardImages.js'
 
 const SCRYFALL_SEARCH = 'https://api.scryfall.com/cards/search'
 
-function cardImage(card) {
-  if (card.image_uris?.normal) return card.image_uris.normal
-  if (card.card_faces?.[0]?.image_uris?.normal) return card.card_faces[0].image_uris.normal
-  return null
-}
+function hasImage(card) { return cardImages(card).length > 0 }
 
 
 export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [] }) {
@@ -138,7 +135,6 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
         <div className="sidebar-recent">
           <div className="sidebar-recent-header">Recently played by others</div>
           {recentCards.map(({ card, playerName }, i) => {
-            const img = cardImage(card)
             return (
               <div
                 key={`${card.id}-${i}`}
@@ -159,7 +155,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
         </div>
       )}
 
-      {hoveredCard && cardImage(hoveredCard) && hoverAnchor && (
+      {hoveredCard && hasImage(hoveredCard) && hoverAnchor && (
         <div style={{
           position: 'fixed',
           top: Math.min(hoverAnchor.top, window.innerHeight - 420),
@@ -170,7 +166,11 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
           boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           pointerEvents: 'none',
         }}>
-          <img src={cardImage(hoveredCard)} alt={hoveredCard.name} style={{ width: 300, borderRadius: 8, display: 'block' }} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            {cardImages(hoveredCard).map((url, i) => (
+              <img key={i} src={url} alt={hoveredCard.name} style={{ width: 300, borderRadius: 8, display: 'block' }} />
+            ))}
+          </div>
         </div>
       )}
     </div>
