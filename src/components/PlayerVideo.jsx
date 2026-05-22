@@ -3,7 +3,7 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
@@ -68,6 +68,12 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
       )}
 
       <div className="player-overlay">
+        <span
+          className="player-drag-handle"
+          draggable={true}
+          onDragStart={onDragStart}
+          title="Drag to reorder"
+        >⠿</span>
         <span className="player-name">{name}</span>
 
         {(isLocal || commanders.length > 0) && (

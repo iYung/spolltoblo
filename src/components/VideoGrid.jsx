@@ -19,15 +19,10 @@ export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCom
           key={player.peerId}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); if (dragIndex !== null && dragIndex !== i) onReorder(dragIndex, i); setDragIndex(null) }}
-          style={{ position: 'relative', display: 'flex' }}
+          style={{ display: 'flex' }}
         >
-          <span
-            className="player-drag-handle"
-            draggable={true}
-            onDragStart={() => setDragIndex(i)}
-            title="Drag to reorder"
-          >⠿</span>
           <PlayerVideo
+            onDragStart={() => setDragIndex(i)}
             player={player}
             isLocal={player.peerId === myId}
             opponents={players.filter((p) => p.peerId !== player.peerId)}

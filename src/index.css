@@ -209,15 +209,12 @@ html, body, #root {
 }
 
 .player-drag-handle {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 3;
   color: rgba(255,255,255,0.55);
   cursor: grab;
   font-size: 14px;
   line-height: 1;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .player-drag-handle:active { cursor: grabbing; }
@@ -229,6 +226,7 @@ html, body, #root {
   right: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   padding: 6px 8px;
   background: linear-gradient(transparent, rgba(0,0,0,0.85));
