@@ -21,7 +21,7 @@ export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCom
           onDragStart={() => setDragIndex(i)}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); if (dragIndex !== null && dragIndex !== i) onReorder(dragIndex, i); setDragIndex(null) }}
-          style={{ cursor: 'grab' }}
+          style={{ cursor: 'grab', display: 'flex' }}
         >
           <PlayerVideo
             player={player}
