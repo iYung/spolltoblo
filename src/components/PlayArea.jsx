@@ -24,6 +24,7 @@ export default function PlayArea({
   isVideoHidden,
   onToggleMute,
   onToggleVideo,
+  onReorder,
 }) {
   const areaRef = useRef(null)
 
@@ -68,6 +69,7 @@ export default function PlayArea({
         isVideoHidden={isVideoHidden}
         onToggleMute={onToggleMute}
         onToggleVideo={onToggleVideo}
+        onReorder={onReorder}
       />
 
       {pinnedCards.map((pin) => (

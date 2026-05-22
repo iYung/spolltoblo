@@ -58,7 +58,7 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
-// rooms: Map<roomId, Map<peerId, { ws, name, joinOrder }>>
+// rooms: Map<roomId, { peers: Map<peerId, { ws, name, joinOrder }>, playerOrder: string[] }>
 const rooms = new Map()
 
 wss.on('connection', (ws) => {
@@ -82,21 +82,24 @@ wss.on('connection', (ws) => {
         currentRoom = roomId
         currentPeerId = peerId
 
-        if (!rooms.has(roomId)) rooms.set(roomId, new Map())
+        if (!rooms.has(roomId)) rooms.set(roomId, { peers: new Map(), playerOrder: [] })
         const room = rooms.get(roomId)
 
-        const joinOrder = room.size
+        const joinOrder = room.peers.size
+
+        // Append the new peer to the shared player order
+        room.playerOrder.push(peerId)
 
         // Tell new peer who is already here (with join order) and their own join order
-        const existingPeers = [...room.entries()].map(([id, info]) => ({ peerId: id, name: info.name, joinOrder: info.joinOrder }))
-        ws.send(JSON.stringify({ type: 'room-peers', myJoinOrder: joinOrder, peers: existingPeers }))
+        const existingPeers = [...room.peers.entries()].map(([id, info]) => ({ peerId: id, name: info.name, joinOrder: info.joinOrder }))
+        ws.send(JSON.stringify({ type: 'room-peers', myJoinOrder: joinOrder, peers: existingPeers, playerOrder: room.playerOrder }))
 
         // Notify everyone else that this peer joined
-        room.forEach((peer) => {
-          peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name, joinOrder }))
+        room.peers.forEach((peer) => {
+          peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name, joinOrder, playerOrder: room.playerOrder }))
         })
 
-        room.set(peerId, { ws, name: msg.name, joinOrder })
+        room.peers.set(peerId, { ws, name: msg.name, joinOrder })
         break
       }
 
@@ -105,7 +108,7 @@ wss.on('connection', (ws) => {
       case 'ice-candidate': {
         const room = rooms.get(currentRoom)
         if (!room) return
-        const target = room.get(msg.to)
+        const target = room.peers.get(msg.to)
         if (target) {
           target.ws.send(JSON.stringify({ ...msg, from: currentPeerId }))
         }
@@ -116,9 +119,21 @@ wss.on('connection', (ws) => {
       case 'game-event': {
         const room = rooms.get(currentRoom)
         if (!room) return
-        room.forEach((peer, peerId) => {
+        room.peers.forEach((peer, peerId) => {
           if (peerId !== currentPeerId) {
             peer.ws.send(JSON.stringify({ ...msg, from: currentPeerId }))
+          }
+        })
+        break
+      }
+
+      case 'player-order': {
+        const room = rooms.get(currentRoom)
+        if (!room) return
+        room.playerOrder = msg.playerOrder
+        room.peers.forEach((peer, peerId) => {
+          if (peerId !== currentPeerId) {
+            peer.ws.send(JSON.stringify({ type: 'player-order', playerOrder: room.playerOrder }))
           }
         })
         break
@@ -130,11 +145,12 @@ wss.on('connection', (ws) => {
     if (!currentRoom || !currentPeerId) return
     const room = rooms.get(currentRoom)
     if (!room) return
-    room.delete(currentPeerId)
-    room.forEach((peer) => {
-      peer.ws.send(JSON.stringify({ type: 'peer-left', peerId: currentPeerId }))
+    room.peers.delete(currentPeerId)
+    room.playerOrder = room.playerOrder.filter((id) => id !== currentPeerId)
+    room.peers.forEach((peer) => {
+      peer.ws.send(JSON.stringify({ type: 'peer-left', peerId: currentPeerId, playerOrder: room.playerOrder }))
     })
-    if (room.size === 0) rooms.delete(currentRoom)
+    if (room.peers.size === 0) rooms.delete(currentRoom)
   })
 })
 

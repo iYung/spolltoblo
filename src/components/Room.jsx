@@ -29,6 +29,7 @@ export default function Room({ roomId, playerName, password }) {
   const [volumes, setVolumes] = useState({})
   const [rotations, setRotations] = useState({})
   const [authError, setAuthError] = useState(false)
+  const [playerOrder, setPlayerOrder] = useState([])
   const [recentCards, setRecentCards] = useState([])
   const [showDeviceSelector, setShowDeviceSelector] = useState(false)
   const [deviceIds, setDeviceIds] = useState({ videoDeviceId: '', audioDeviceId: '' })
@@ -136,6 +137,7 @@ export default function Room({ roomId, playerName, password }) {
       switch (msg.type) {
         case 'room-peers': {
           myJoinOrder.current = msg.myJoinOrder
+          setPlayerOrder(msg.playerOrder ?? [])
           for (const peer of msg.peers) {
             if (peer.peerId === myId.current) continue
             setPeers((prev) => ({ ...prev, [peer.peerId]: { ...prev[peer.peerId], name: peer.name, joinOrder: peer.joinOrder, stream: prev[peer.peerId]?.stream ?? null } }))
@@ -148,6 +150,7 @@ export default function Room({ roomId, playerName, password }) {
         }
 
         case 'peer-joined': {
+          setPlayerOrder(msg.playerOrder ?? [])
           setPeers((prev) => ({ ...prev, [msg.peerId]: { name: msg.name, stream: null, joinOrder: msg.joinOrder } }))
           setGameState((prev) => ({
             ...prev,
@@ -188,10 +191,16 @@ export default function Room({ roomId, playerName, password }) {
         }
 
         case 'peer-left': {
+          setPlayerOrder(msg.playerOrder ?? [])
           pcsRef.current[msg.peerId]?.close()
           delete pcsRef.current[msg.peerId]
           setPeers((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
           setGameState((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
+          break
+        }
+
+        case 'player-order': {
+          setPlayerOrder(msg.playerOrder)
           break
         }
 
@@ -353,6 +362,16 @@ export default function Room({ roomId, playerName, password }) {
     setPinnedCards((prev) => prev.map((p) => p.id === id ? { ...p, x, y } : p))
   }
 
+  function handleReorder(fromIndex, toIndex) {
+    const next = [...playerOrder]
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, moved)
+    setPlayerOrder(next)
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'player-order', playerOrder: next }))
+    }
+  }
+
   function handleVolumeChange(peerId, value) {
     setVolumes((prev) => ({ ...prev, [peerId]: value }))
   }
@@ -397,6 +416,7 @@ export default function Room({ roomId, playerName, password }) {
       return true
     })
   }, [gameState])
+  const orderMap = Object.fromEntries(playerOrder.map((id, i) => [id, i]))
   const allPlayers = [
     { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
@@ -407,7 +427,7 @@ export default function Room({ roomId, playerName, password }) {
       state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null },
       joinOrder: peer.joinOrder ?? Infinity,
     })),
-  ].sort((a, b) => a.joinOrder - b.joinOrder)
+  ].sort((a, b) => (orderMap[a.peerId] ?? Infinity) - (orderMap[b.peerId] ?? Infinity))
 
   const alone = Object.keys(peers).length === 0
 
@@ -472,6 +492,7 @@ export default function Room({ roomId, playerName, password }) {
           isVideoHidden={isVideoHidden}
           onToggleMute={handleToggleMute}
           onToggleVideo={handleToggleVideo}
+          onReorder={handleReorder}
         />
 
         {sidebarOpen && (
