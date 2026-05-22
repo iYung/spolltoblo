@@ -208,12 +208,25 @@ html, body, #root {
   flex-wrap: wrap;
 }
 
+.player-drag-handle {
+  color: rgba(255,255,255,0.55);
+  cursor: grab;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.player-drag-handle:active { cursor: grabbing; }
+
 .player-overlay-bottom {
   position: absolute;
   bottom: 0;
+  left: 0;
   right: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   padding: 6px 8px;
   background: linear-gradient(transparent, rgba(0,0,0,0.85));
