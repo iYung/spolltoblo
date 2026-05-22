@@ -18,6 +18,8 @@ export default function Room({ roomId, playerName, password }) {
   const gameStateRef = useRef({})
 
   const [localStream, setLocalStream] = useState(null)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isVideoHidden, setIsVideoHidden] = useState(false)
   const [peers, setPeers] = useState({}) // peerId -> { stream, name }
   const [gameState, setGameState] = useState({}) // peerId -> { life, commanderDamage }
   const [pinnedCards, setPinnedCards] = useState([])
@@ -63,6 +65,8 @@ export default function Room({ roomId, playerName, password }) {
         localStreamRef.current?.getTracks().forEach((t) => t.stop())
         localStreamRef.current = stream
         setLocalStream(stream)
+        stream.getAudioTracks().forEach(t => { t.enabled = !isMuted })
+        stream.getVideoTracks().forEach(t => { t.enabled = !isVideoHidden })
       })
       .catch(() => {
         if (!localStreamRef.current) {
@@ -355,6 +359,24 @@ export default function Room({ roomId, playerName, password }) {
     setRotations((prev) => ({ ...prev, [peerId]: !prev[peerId] }))
   }
 
+  function handleToggleMute() {
+    setIsMuted((prev) => {
+      const next = !prev
+      const track = localStreamRef.current?.getAudioTracks()[0]
+      if (track) track.enabled = !next
+      return next
+    })
+  }
+
+  function handleToggleVideo() {
+    setIsVideoHidden((prev) => {
+      const next = !prev
+      const track = localStreamRef.current?.getVideoTracks()[0]
+      if (track) track.enabled = !next
+      return next
+    })
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(window.location.href)
     setCopyMsg('Copied!')
@@ -444,6 +466,10 @@ export default function Room({ roomId, playerName, password }) {
           onToggleRotate={handleToggleRotate}
           onSetCommanders={setMyCommanders}
           onLoadDeck={loadDeck}
+          isMuted={isMuted}
+          isVideoHidden={isVideoHidden}
+          onToggleMute={handleToggleMute}
+          onToggleVideo={handleToggleVideo}
         />
 
         {sidebarOpen && (

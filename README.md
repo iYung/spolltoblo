@@ -27,6 +27,7 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Deck loading** — paste an Archidekt URL to load your deck; card search scopes to lobby decks instantly with no API calls; auto-sets your commander (and partner commander if present)
 - **Life tracking** — click your life total to edit it directly; use +1 / -1 / +5 / -5 buttons; syncs to all players in real time
 - **Commander damage** — track damage from each opponent's commander separately; partner commanders each get an independent damage track; highlights at 21 (elimination threshold)
+- **Mute / hide camera** — MUTE and CAM buttons on your own tile let you disable your microphone or camera mid-session; buttons turn red when active; state survives device switches
 - **Shareable rooms** — room lives in the URL; no sign-up required
 
 ## Deploying
