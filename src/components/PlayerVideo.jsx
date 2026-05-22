@@ -157,27 +157,28 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           </button>
         )}
 
+      </div>
+
+      <div className="player-overlay-bottom">
         {isLocal && (
-          <>
-            <button
-              className={`mute-btn${isMuted ? ' active' : ''}`}
-              onClick={onToggleMute}
-              title="Toggle microphone"
-            >
-              MUTE
-            </button>
-            <button
-              className={`cam-btn${isVideoHidden ? ' active' : ''}`}
-              onClick={onToggleVideo}
-              title="Toggle camera"
-            >
-              CAM
-            </button>
-          </>
+          <button
+            className={`mute-btn${isMuted ? ' active' : ''}`}
+            onClick={onToggleMute}
+            title="Toggle microphone"
+          >
+            MUTE
+          </button>
         )}
-
+        {isLocal && (
+          <button
+            className={`cam-btn${isVideoHidden ? ' active' : ''}`}
+            onClick={onToggleVideo}
+            title="Toggle camera"
+          >
+            CAM
+          </button>
+        )}
         <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">FLIP CAM</button>
-
         {!isLocal && (
           <input
             type="range"
