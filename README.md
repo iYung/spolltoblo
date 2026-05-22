@@ -1,4 +1,4 @@
-# SpellTable
+# Spolltoblo
 
 A lightweight browser-based webcam card game platform for playing Magic: The Gathering with friends — no accounts, no card recognition, just share a link and play.
 
