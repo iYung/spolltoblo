@@ -1,0 +1,3 @@
+## Webcam Default Aspect Ratio Checklist
+
+- [x] Task A — `src/components/Room.jsx` — In the `useEffect` that calls `getUserMedia` (the one with `[deviceIds]` as its dependency array), replace the `videoConstraint` declaration so that both branches include `aspectRatio: { ideal: 16/9 }`. Change `const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId } } : true` to `const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId }, aspectRatio: { ideal: 16/9 } } : { aspectRatio: { ideal: 16/9 } }`. Do not touch the permission-probe call, the `audioConstraint`, or any other logic in the file.
