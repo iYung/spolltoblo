@@ -93,7 +93,9 @@ wss.on('connection', (ws) => {
 
         // Notify everyone else that this peer joined
         room.forEach((peer) => {
-          peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name, joinOrder }))
+          if (peer.ws !== null) {
+            peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name: msg.name, joinOrder }))
+          }
         })
 
         room.set(peerId, { ws, name: msg.name, joinOrder })
@@ -106,7 +108,7 @@ wss.on('connection', (ws) => {
         const room = rooms.get(currentRoom)
         if (!room) return
         const target = room.get(msg.to)
-        if (target) {
+        if (target && target.ws !== null) {
           target.ws.send(JSON.stringify({ ...msg, from: currentPeerId }))
         }
         break
@@ -117,8 +119,81 @@ wss.on('connection', (ws) => {
         const room = rooms.get(currentRoom)
         if (!room) return
         room.forEach((peer, peerId) => {
-          if (peerId !== currentPeerId) {
+          if (peerId !== currentPeerId && peer.ws !== null) {
             peer.ws.send(JSON.stringify({ ...msg, from: currentPeerId }))
+          }
+        })
+        break
+      }
+
+      case 'rejoin': {
+        const { roomId, peerId, name } = msg
+        const room = rooms.get(roomId)
+        const existingPeer = room?.get(peerId)
+
+        if (existingPeer && existingPeer.disconnected === true) {
+          existingPeer.ws = ws
+          delete existingPeer.disconnected
+
+          currentRoom = roomId
+          currentPeerId = peerId
+
+          // Notify all other connected peers that this peer rejoined
+          room.forEach((peer, pid) => {
+            if (pid !== peerId && peer.ws !== null) {
+              peer.ws.send(JSON.stringify({ type: 'peer-rejoined', peerId, name: existingPeer.name, joinOrder: existingPeer.joinOrder }))
+            }
+          })
+
+          // Reply to rejoining peer with all other peers (connected and disconnected)
+          const otherPeers = [...room.entries()]
+            .filter(([pid]) => pid !== peerId)
+            .map(([pid, info]) => ({ peerId: pid, name: info.name, joinOrder: info.joinOrder, disconnected: info.disconnected === true }))
+          ws.send(JSON.stringify({ type: 'room-peers', peers: otherPeers }))
+          break
+        }
+
+        // Fall through to join logic if peer not found or not disconnected
+        const secret = process.env.JOIN_SECRET
+        if (secret && msg.secret !== secret) {
+          ws.send(JSON.stringify({ type: 'error', reason: 'wrong-password' }))
+          ws.close()
+          return
+        }
+
+        currentRoom = roomId
+        currentPeerId = peerId
+
+        if (!rooms.has(roomId)) rooms.set(roomId, new Map())
+        const joinRoom = rooms.get(roomId)
+
+        const joinOrder = joinRoom.size
+
+        const existingPeers = [...joinRoom.entries()].map(([id, info]) => ({ peerId: id, name: info.name, joinOrder: info.joinOrder }))
+        ws.send(JSON.stringify({ type: 'room-peers', myJoinOrder: joinOrder, peers: existingPeers }))
+
+        joinRoom.forEach((peer) => {
+          if (peer.ws !== null) {
+            peer.ws.send(JSON.stringify({ type: 'peer-joined', peerId, name, joinOrder }))
+          }
+        })
+
+        joinRoom.set(peerId, { ws, name, joinOrder })
+        break
+      }
+
+      case 'kick': {
+        const { roomId, targetPeerId } = msg
+        const room = rooms.get(roomId)
+        if (!room) break
+        const target = room.get(targetPeerId)
+        if (!target || target.disconnected !== true) break
+
+        room.delete(targetPeerId)
+
+        room.forEach((peer) => {
+          if (peer.ws !== null) {
+            peer.ws.send(JSON.stringify({ type: 'peer-left', peerId: targetPeerId }))
           }
         })
         break
@@ -130,11 +205,18 @@ wss.on('connection', (ws) => {
     if (!currentRoom || !currentPeerId) return
     const room = rooms.get(currentRoom)
     if (!room) return
-    room.delete(currentPeerId)
-    room.forEach((peer) => {
-      peer.ws.send(JSON.stringify({ type: 'peer-left', peerId: currentPeerId }))
+    const peer = room.get(currentPeerId)
+    if (peer) {
+      peer.disconnected = true
+      peer.ws = null
+    }
+    room.forEach((p) => {
+      if (p.ws !== null) {
+        p.ws.send(JSON.stringify({ type: 'peer-disconnected', peerId: currentPeerId }))
+      }
     })
-    if (room.size === 0) rooms.delete(currentRoom)
+    const allDisconnected = [...room.values()].every((p) => p.ws === null)
+    if (allDisconnected) rooms.delete(currentRoom)
   })
 })
 

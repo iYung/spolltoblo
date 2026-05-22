@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { generateId } from '../utils/id.js'
+import { getOrCreateId } from '../utils/id.js'
 import VideoGrid from './VideoGrid.jsx'
 import CardSidebar from './CardSidebar.jsx'
 import PlayArea from './PlayArea.jsx'
@@ -10,7 +10,7 @@ const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
 const DEFAULT_LIFE = 40
 
 export default function Room({ roomId, playerName, password }) {
-  const myId = useRef(generateId())
+  const myId = useRef(getOrCreateId())
   const myJoinOrder = useRef(0)
   const wsRef = useRef(null)
   const pcsRef = useRef({}) // peerId -> RTCPeerConnection
@@ -127,7 +127,7 @@ export default function Room({ roomId, playerName, password }) {
     wsRef.current = ws
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'join', roomId, peerId: myId.current, name: playerName, secret: password }))
+      ws.send(JSON.stringify({ type: 'rejoin', roomId, peerId: myId.current, name: playerName, secret: password }))
     }
 
     ws.onmessage = async (event) => {
@@ -138,7 +138,7 @@ export default function Room({ roomId, playerName, password }) {
           myJoinOrder.current = msg.myJoinOrder
           for (const peer of msg.peers) {
             if (peer.peerId === myId.current) continue
-            setPeers((prev) => ({ ...prev, [peer.peerId]: { ...prev[peer.peerId], name: peer.name, joinOrder: peer.joinOrder, stream: prev[peer.peerId]?.stream ?? null } }))
+            setPeers((prev) => ({ ...prev, [peer.peerId]: { ...prev[peer.peerId], name: peer.name, joinOrder: peer.joinOrder, stream: prev[peer.peerId]?.stream ?? null, disconnected: peer.disconnected ?? false } }))
             const pc = createPC(peer.peerId)
             const offer = await pc.createOffer()
             await pc.setLocalDescription(offer)
@@ -192,6 +192,28 @@ export default function Room({ roomId, playerName, password }) {
           delete pcsRef.current[msg.peerId]
           setPeers((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
           setGameState((prev) => { const n = { ...prev }; delete n[msg.peerId]; return n })
+          break
+        }
+
+        case 'peer-disconnected': {
+          pcsRef.current[msg.peerId]?.close()
+          delete pcsRef.current[msg.peerId]
+          setPeers((prev) => ({ ...prev, [msg.peerId]: { ...prev[msg.peerId], disconnected: true } }))
+          break
+        }
+
+        case 'peer-rejoined': {
+          setPeers((prev) => ({ ...prev, [msg.peerId]: { ...prev[msg.peerId], disconnected: false, name: msg.name, joinOrder: msg.joinOrder } }))
+          const pc = createPC(msg.peerId)
+          const offer = await pc.createOffer()
+          await pc.setLocalDescription(offer)
+          sendWs({ type: 'offer', to: msg.peerId, sdp: offer })
+          const mine = gameStateRef.current[myId.current]
+          if (mine) {
+            broadcastGameEvent({ type: 'life-update', life: mine.life ?? DEFAULT_LIFE })
+            if (mine.commanders?.length) broadcastGameEvent({ type: 'commanders-update', commanders: mine.commanders })
+            if (mine.deck) broadcastGameEvent({ type: 'deck-loaded', deckName: mine.deck.name, cards: mine.deck.cards })
+          }
           break
         }
 
@@ -329,7 +351,7 @@ export default function Room({ roomId, playerName, password }) {
   }
 
   function pinCard(card, x, y) {
-    setPinnedCards((prev) => [...prev, { id: generateId(), card, x, y }])
+    setPinnedCards((prev) => [...prev, { id: Math.random().toString(36).slice(2, 10), card, x, y }])
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
     setRecentCards((prev) => [
       { card, playerName },
@@ -472,6 +494,7 @@ export default function Room({ roomId, playerName, password }) {
           isVideoHidden={isVideoHidden}
           onToggleMute={handleToggleMute}
           onToggleVideo={handleToggleVideo}
+          onKick={(targetPeerId) => sendWs({ type: 'kick', roomId, targetPeerId })}
         />
 
         {sidebarOpen && (

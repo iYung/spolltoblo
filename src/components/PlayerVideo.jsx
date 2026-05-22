@@ -3,7 +3,7 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onKick }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
@@ -46,7 +46,15 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
   const isEliminated = life <= 0 || Object.values(commanderDamage).some((d) => d >= 21) || poison >= 10
 
   return (
-    <div className={`player-video ${isEliminated ? 'eliminated' : ''}`}>
+    <div className={`player-video ${isEliminated ? 'eliminated' : ''}`} style={{ position: 'relative' }}>
+      {player.disconnected && (
+        <div className="disconnected-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <span className="disconnected-label" style={{ color: '#fff' }}>Disconnected</span>
+          {onKick && (
+            <button className="kick-btn" onClick={() => onKick(player.peerId)}>Kick</button>
+          )}
+        </div>
+      )}
       {/* Always keep video in DOM so videoRef is valid when srcObject is set */}
       <video
         ref={videoRef}

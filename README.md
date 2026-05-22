@@ -28,6 +28,7 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Life tracking** — click your life total to edit it directly; use +1 / -1 / +5 / -5 buttons; syncs to all players in real time
 - **Commander damage** — track damage from each opponent's commander separately with +1 / -1 / +5 / -5 buttons; adjusting commander damage automatically updates your life total; partner commanders each get an independent damage track; highlights at 21 (elimination threshold)
 - **Mute / hide camera** — MUTE and CAM buttons on your own tile let you disable your microphone or camera mid-session; buttons turn red when active; state survives device switches
+- **Disconnect / rejoin** — if a player loses connection or reloads the page, their seat is preserved; other players see a "Disconnected" overlay on that tile with life totals intact; the player is automatically restored to their seat when they reconnect, and WebRTC re-establishes; any player can **Kick** a disconnected peer to permanently remove them from the room
 - **Shareable rooms** — room lives in the URL; no sign-up required
 
 ## Deploying
