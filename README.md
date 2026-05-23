@@ -30,6 +30,28 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Mute / hide camera** — MUTE and CAM buttons on your own tile let you disable your microphone or camera mid-session; buttons turn red when active; state survives device switches
 - **Shareable rooms** — room lives in the URL; no sign-up required
 
+## Testing
+
+Run the test suite once (used in CI):
+
+```bash
+npx vitest run
+```
+
+Run in watch mode during development:
+
+```bash
+npm test
+```
+
+The suite covers three layers:
+
+- **Utilities** — `generateId`, `cardImages`, `enrichDeck` (with mocked fetch)
+- **Server** — `GET /api/deck` integration tests via supertest; WebSocket room logic (join, relay, disconnect) via real `ws.WebSocket` client against a live in-process server
+- **React components** — `App`, `CommanderDamage`, `PlayerVideo`, `CardSidebar` via `@testing-library/react`
+
+CI runs automatically on every push and pull request via GitHub Actions (`.github/workflows/ci.yml`), using Node.js LTS and `npm run test:run`.
+
 ## Deploying
 
 Set `NODE_ENV=production`, build with `npm run build`, and start with `node server/index.js`. The server serves the built frontend as static files.
