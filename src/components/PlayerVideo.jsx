@@ -3,7 +3,7 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart }) {
+export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart, onDragEnd }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
@@ -44,6 +44,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
 
   const totalCmdDmg = Object.values(commanderDamage).reduce((a, b) => a + b, 0)
   const isEliminated = life <= 0 || Object.values(commanderDamage).some((d) => d >= 21) || poison >= 10
+  const allCmdrImgs = commanders.flatMap(c => cardImages(c).map(url => ({ url, name: c.name })))
 
   return (
     <div className={`player-video ${isEliminated ? 'eliminated' : ''}`}>
@@ -56,12 +57,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         className="video-el"
         style={{ display: (stream && !(isLocal && isVideoHidden)) ? 'block' : 'none', transform: rotated ? 'rotate(180deg)' : undefined }}
       />
-      {!stream && (
-        <div className="video-placeholder">
-          <span>{name?.[0]?.toUpperCase() ?? '?'}</span>
-        </div>
-      )}
-      {isLocal && isVideoHidden && stream && (
+      {(!stream || (isLocal && isVideoHidden)) && (
         <div className="video-placeholder">
           <span>{name?.[0]?.toUpperCase() ?? '?'}</span>
         </div>
@@ -72,6 +68,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           className="player-drag-handle"
           draggable={true}
           onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
           title="Drag to reorder"
         >⠿</span>
         <span className="player-name">{name}</span>
@@ -193,11 +190,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
             max="1"
             step="0.05"
             value={volume}
-            onChange={(e) => {
-              const v = parseFloat(e.target.value)
-              onVolumeChange(v)
-              if (videoRef.current) videoRef.current.volume = v
-            }}
+            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
           />
         )}
       </div>
@@ -217,7 +210,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         />
       )}
 
-      {commanderHoverRect && commanders.length > 0 && commanders.some(c => cardImages(c).length > 0) && (
+      {commanderHoverRect && allCmdrImgs.length > 0 && (
         <div style={{
           position: 'fixed',
           top: commanderHoverRect.bottom + 6,
@@ -230,12 +223,9 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           display: 'flex',
           gap: 8,
         }}>
-          {(() => {
-            const allImgs = commanders.flatMap(c => cardImages(c).map(url => ({ url, name: c.name })))
-            return allImgs.map((entry, i) => (
-              <img key={i} src={entry.url} alt={entry.name} style={{ width: allImgs.length > 1 ? 180 : 300, borderRadius: 8, display: 'block' }} />
-            ))
-          })()}
+          {allCmdrImgs.map((entry, i) => (
+            <img key={i} src={entry.url} alt={entry.name} style={{ width: allCmdrImgs.length > 1 ? 180 : 300, borderRadius: 8, display: 'block' }} />
+          ))}
         </div>
       )}
 

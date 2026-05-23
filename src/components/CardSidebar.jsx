@@ -3,8 +3,6 @@ import { cardImages } from '../utils/cardImages.js'
 
 const SCRYFALL_SEARCH = 'https://api.scryfall.com/cards/search'
 
-function hasImage(card) { return cardImages(card).length > 0 }
-
 
 export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [] }) {
   const [query, setQuery] = useState('')
@@ -73,6 +71,8 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
     e.dataTransfer.effectAllowed = 'copy'
   }
 
+  const hoverImgs = hoveredCard ? cardImages(hoveredCard) : []
+
   return (
     <div className="card-sidebar" style={{ width }}>
       <div className="resize-handle" onMouseDown={startResize} />
@@ -137,7 +137,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
           {recentCards.map(({ card, playerName }, i) => {
             return (
               <div
-                key={`${card.id}-${i}`}
+                key={card.id}
                 className="card-result"
                 draggable
                 onDragStart={(e) => dragCard(e, card)}
@@ -155,7 +155,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
         </div>
       )}
 
-      {hoveredCard && hasImage(hoveredCard) && hoverAnchor && (
+      {hoverImgs.length > 0 && hoverAnchor && (
         <div style={{
           position: 'fixed',
           top: Math.min(hoverAnchor.top, window.innerHeight - 420),
@@ -167,7 +167,7 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
           pointerEvents: 'none',
         }}>
           <div style={{ display: 'flex', gap: 8 }}>
-            {cardImages(hoveredCard).map((url, i) => (
+            {hoverImgs.map((url, i) => (
               <img key={i} src={url} alt={hoveredCard.name} style={{ width: 300, borderRadius: 8, display: 'block' }} />
             ))}
           </div>

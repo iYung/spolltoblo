@@ -16,6 +16,8 @@ export default function Room({ roomId, playerName, password }) {
   const pcsRef = useRef({}) // peerId -> RTCPeerConnection
   const localStreamRef = useRef(null)
   const gameStateRef = useRef({})
+  const isMutedRef = useRef(false)
+  const isVideoHiddenRef = useRef(false)
 
   const [localStream, setLocalStream] = useState(null)
   const [isMuted, setIsMuted] = useState(false)
@@ -66,14 +68,15 @@ export default function Room({ roomId, playerName, password }) {
         localStreamRef.current?.getTracks().forEach((t) => t.stop())
         localStreamRef.current = stream
         setLocalStream(stream)
-        stream.getAudioTracks().forEach(t => { t.enabled = !isMuted })
-        stream.getVideoTracks().forEach(t => { t.enabled = !isVideoHidden })
+        stream.getAudioTracks().forEach(t => { t.enabled = !isMutedRef.current })
+        stream.getVideoTracks().forEach(t => { t.enabled = !isVideoHiddenRef.current })
       })
       .catch(() => {
         if (!localStreamRef.current) {
           // No camera on first load — create empty stream so WebRTC still works
-          localStreamRef.current = new MediaStream()
-          setLocalStream(new MediaStream())
+          const emptyStream = new MediaStream()
+          localStreamRef.current = emptyStream
+          setLocalStream(emptyStream)
         }
       })
   }, [deviceIds])
@@ -367,9 +370,7 @@ export default function Room({ roomId, playerName, password }) {
     const [moved] = next.splice(fromIndex, 1)
     next.splice(toIndex, 0, moved)
     setPlayerOrder(next)
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'player-order', playerOrder: next }))
-    }
+    sendWs({ type: 'player-order', playerOrder: next })
   }
 
   function handleVolumeChange(peerId, value) {
@@ -405,6 +406,8 @@ export default function Room({ roomId, playerName, password }) {
   }
 
   gameStateRef.current = gameState
+  isMutedRef.current = isMuted
+  isVideoHiddenRef.current = isVideoHidden
 
   const myState = gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null }
 
@@ -416,9 +419,12 @@ export default function Room({ roomId, playerName, password }) {
       return true
     })
   }, [gameState])
-  const orderMap = Object.fromEntries(playerOrder.map((id, i) => [id, i]))
-  const allPlayers = [
-    { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: myState, joinOrder: myJoinOrder.current },
+  const orderMap = useMemo(
+    () => Object.fromEntries(playerOrder.map((id, i) => [id, i])),
+    [playerOrder]
+  )
+  const allPlayers = useMemo(() => [
+    { peerId: myId.current, name: playerName, stream: localStream, isLocal: true, state: gameState[myId.current] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null }, joinOrder: myJoinOrder.current },
     ...Object.entries(peers).map(([peerId, peer]) => ({
       peerId,
       name: peer.name ?? peerId,
@@ -427,7 +433,8 @@ export default function Room({ roomId, playerName, password }) {
       state: gameState[peerId] ?? { life: DEFAULT_LIFE, commanderDamage: {}, poison: 0, commanders: [], deck: null },
       joinOrder: peer.joinOrder ?? Infinity,
     })),
-  ].sort((a, b) => (orderMap[a.peerId] ?? Infinity) - (orderMap[b.peerId] ?? Infinity))
+  ].sort((a, b) => (orderMap[a.peerId] ?? Infinity) - (orderMap[b.peerId] ?? Infinity)),
+  [orderMap, peers, localStream, gameState, playerName])
 
   const alone = Object.keys(peers).length === 0
 

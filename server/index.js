@@ -130,7 +130,9 @@ wss.on('connection', (ws) => {
       case 'player-order': {
         const room = rooms.get(currentRoom)
         if (!room) return
-        room.playerOrder = msg.playerOrder
+        if (!Array.isArray(msg.playerOrder)) return
+        const validIds = new Set(room.peers.keys())
+        room.playerOrder = msg.playerOrder.filter((id) => validIds.has(id))
         room.peers.forEach((peer, peerId) => {
           if (peerId !== currentPeerId) {
             peer.ws.send(JSON.stringify({ type: 'player-order', playerOrder: room.playerOrder }))

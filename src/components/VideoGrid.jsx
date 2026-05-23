@@ -23,6 +23,7 @@ export default function VideoGrid({ players, myId, onLifeDelta, onSetLife, onCom
         >
           <PlayerVideo
             onDragStart={() => setDragIndex(i)}
+            onDragEnd={() => setDragIndex(null)}
             player={player}
             isLocal={player.peerId === myId}
             opponents={players.filter((p) => p.peerId !== player.peerId)}
