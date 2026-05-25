@@ -116,8 +116,8 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         <div className="life-section">
           {isLocal ? (
             <>
-              <button className="life-btn" onClick={() => onLifeDelta(-5)}>-5</button>
-              <button className="life-btn" onClick={() => onLifeDelta(-1)}>-1</button>
+              <button className="overlay-btn life-btn" onClick={() => onLifeDelta(-5)}>-5</button>
+              <button className="overlay-btn life-btn" onClick={() => onLifeDelta(-1)}>-1</button>
               {editingLife ? (
                 <input
                   className="life-input"
@@ -136,8 +136,8 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
                   {life}
                 </span>
               )}
-              <button className="life-btn" onClick={() => onLifeDelta(1)}>+1</button>
-              <button className="life-btn" onClick={() => onLifeDelta(5)}>+5</button>
+              <button className="overlay-btn life-btn" onClick={() => onLifeDelta(1)}>+1</button>
+              <button className="overlay-btn life-btn" onClick={() => onLifeDelta(5)}>+5</button>
             </>
           ) : (
             <span className="life-total">{life}</span>
@@ -146,7 +146,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
 
         {isLocal && (
           <button
-            className={`cmd-btn ${totalCmdDmg > 0 || poison > 0 ? 'has-damage' : ''}`}
+            className={`overlay-btn cmd-btn ${totalCmdDmg > 0 || poison > 0 ? 'has-damage' : ''}`}
             onClick={() => setShowCmdDmg(true)}
             title="Commander damage & poison"
           >
@@ -155,7 +155,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         )}
 
         {isLocal && (
-          <button className="reset-btn" onClick={onReset} title="Reset to 40 life, clear commander damage">
+          <button className="overlay-btn reset-btn" onClick={onReset} title="Reset to 40 life, clear commander damage">
             RESET
           </button>
         )}
@@ -165,7 +165,7 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
       <div className="player-overlay-bottom">
         {isLocal && (
           <button
-            className={`mute-btn${isMuted ? ' active' : ''}`}
+            className={`overlay-btn mute-btn${isMuted ? ' active' : ''}`}
             onClick={onToggleMute}
             title="Toggle microphone"
           >
@@ -174,14 +174,14 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
         )}
         {isLocal && (
           <button
-            className={`cam-btn${isVideoHidden ? ' active' : ''}`}
+            className={`overlay-btn cam-btn${isVideoHidden ? ' active' : ''}`}
             onClick={onToggleVideo}
             title="Toggle camera"
           >
             CAM
           </button>
         )}
-        <button className="rotate-btn" onClick={onToggleRotate} title="Flip video">FLIP CAM</button>
+        <button className="overlay-btn rotate-btn" onClick={onToggleRotate} title="Flip video">FLIP CAM</button>
         {!isLocal && (
           <input
             type="range"
