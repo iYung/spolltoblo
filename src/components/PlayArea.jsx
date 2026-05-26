@@ -4,6 +4,7 @@ import CardPin from './CardPin.jsx'
 
 export default function PlayArea({
   players,
+  allPlayers,
   myId,
   pinnedCards,
   onPinCard,
@@ -53,6 +54,7 @@ export default function PlayArea({
     >
       <VideoGrid
         players={players}
+        allPlayers={allPlayers}
         myId={myId}
         onLifeDelta={onLifeDelta}
         onSetLife={onSetLife}

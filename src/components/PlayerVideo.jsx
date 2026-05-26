@@ -3,12 +3,13 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart, onDragEnd }) {
+export default function PlayerVideo({ player, isLocal, opponents, allPlayers = [], onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart, onDragEnd }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
   const [showCmdDmg, setShowCmdDmg] = useState(false)
+  const [showOpponentStats, setShowOpponentStats] = useState(false)
   const [showCommanderPicker, setShowCommanderPicker] = useState(false)
   const [pickerMode, setPickerMode] = useState('primary')
   const [commanderHoverRect, setCommanderHoverRect] = useState(null)
@@ -140,7 +141,14 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
               <button className="overlay-btn life-btn" onClick={() => onLifeDelta(5)}>+5</button>
             </>
           ) : (
-            <span className="life-total">{life}</span>
+            <span
+              className="life-total"
+              style={{ cursor: 'pointer' }}
+              title="Click to view damage & poison"
+              onClick={() => setShowOpponentStats(true)}
+            >
+              {life}
+            </span>
           )}
         </div>
 
@@ -207,6 +215,17 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           poison={poison}
           onPoisonDelta={onPoisonDelta}
           onClose={() => setShowCmdDmg(false)}
+        />
+      )}
+
+      {showOpponentStats && !isLocal && (
+        <CommanderDamage
+          readOnly
+          title={`Damage Received by ${name}`}
+          opponents={allPlayers.filter(p => p.peerId !== player.peerId)}
+          commanderDamage={commanderDamage}
+          poison={poison}
+          onClose={() => setShowOpponentStats(false)}
         />
       )}
 

@@ -133,4 +133,24 @@ describe('PlayerVideo', () => {
     fireEvent.click(screen.getByRole('button', { name: /reset/i }))
     expect(onReset).toHaveBeenCalledOnce()
   })
+
+  it('opponent life span does not show CommanderDamage overlay before click', () => {
+    render(<PlayerVideo {...buildProps({ isLocal: false })} />)
+    expect(screen.queryByText('Damage Received by Alice')).not.toBeInTheDocument()
+  })
+
+  it('clicking the opponent life span shows the CommanderDamage overlay in readOnly mode', () => {
+    render(<PlayerVideo {...buildProps({ isLocal: false })} />)
+    fireEvent.click(screen.getByText('40'))
+    expect(screen.getByText('Damage Received by Alice')).toBeInTheDocument()
+    // readOnly means no +/- adjustment buttons inside the overlay
+    expect(screen.queryByRole('button', { name: '+1' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '-1' })).not.toBeInTheDocument()
+  })
+
+  it('opponent life span has cursor:pointer style', () => {
+    render(<PlayerVideo {...buildProps({ isLocal: false })} />)
+    const lifeSpan = screen.getByText('40')
+    expect(lifeSpan).toHaveStyle({ cursor: 'pointer' })
+  })
 })
