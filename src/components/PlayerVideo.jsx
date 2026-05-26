@@ -141,22 +141,23 @@ export default function PlayerVideo({ player, isLocal, opponents, allPlayers = [
               <button className="overlay-btn life-btn" onClick={() => onLifeDelta(5)}>+5</button>
             </>
           ) : (
-            <span
-              className="life-total"
-              style={{ cursor: 'pointer' }}
-              title="Click to view damage & poison"
-              onClick={() => setShowOpponentStats(true)}
-            >
-              {life}
-            </span>
+            <span className="life-total">{life}</span>
           )}
         </div>
 
-        {isLocal && (
+        {isLocal ? (
           <button
             className={`overlay-btn cmd-btn ${totalCmdDmg > 0 || poison > 0 ? 'has-damage' : ''}`}
             onClick={() => setShowCmdDmg(true)}
             title="Commander damage & poison"
+          >
+            DMG
+          </button>
+        ) : (
+          <button
+            className={`overlay-btn cmd-btn ${Object.values(commanderDamage).some(d => d >= 21) || poison >= 10 ? 'has-damage' : ''}`}
+            onClick={() => setShowOpponentStats(true)}
+            title="View commander damage & poison"
           >
             DMG
           </button>
