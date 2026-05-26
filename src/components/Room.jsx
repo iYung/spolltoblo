@@ -32,7 +32,7 @@ export default function Room({ roomId, playerName, password }) {
   const [rotations, setRotations] = useState({})
   const [authError, setAuthError] = useState(false)
   const [playerOrder, setPlayerOrder] = useState([])
-  const [recentCards, setRecentCards] = useState([])
+  const [lobbyActions, setLobbyActions] = useState([])
   const [showDeviceSelector, setShowDeviceSelector] = useState(false)
   const [deviceIds, setDeviceIds] = useState({ videoDeviceId: '', audioDeviceId: '' })
 
@@ -93,6 +93,12 @@ export default function Room({ roomId, playerName, password }) {
 
   function broadcastGameEvent(payload) {
     sendWs({ type: 'game-event', payload })
+  }
+
+  function rollD20() {
+    const result = Math.ceil(Math.random() * 20)
+    broadcastGameEvent({ type: 'd20-roll', result, playerName })
+    setLobbyActions((prev) => [{ type: 'roll', result, playerName }, ...prev])
   }
 
   function createPC(peerId) {
@@ -243,10 +249,12 @@ export default function Room({ roomId, playerName, password }) {
               [msg.from]: { ...prev[msg.from], deck: { name: payload.deckName, cards: payload.cards } },
             }))
           } else if (payload.type === 'card-pinned') {
-            setRecentCards((prev) => [
-              { card: payload.card, playerName: payload.playerName },
+            setLobbyActions((prev) => [
+              { type: 'card', card: payload.card, playerName: payload.playerName },
               ...prev.filter((e) => e.card.id !== payload.card.id),
             ])
+          } else if (payload.type === 'd20-roll') {
+            setLobbyActions((prev) => [{ type: 'roll', result: payload.result, playerName: payload.playerName }, ...prev])
           }
           break
         }
@@ -343,16 +351,16 @@ export default function Room({ roomId, playerName, password }) {
   function pinCard(card, x, y) {
     setPinnedCards((prev) => [...prev, { id: generateId(), card, x, y }])
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
-    setRecentCards((prev) => [
-      { card, playerName },
+    setLobbyActions((prev) => [
+      { type: 'card', card, playerName },
       ...prev.filter((e) => e.card.id !== card.id),
     ])
   }
 
   function selectCard(card) {
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
-    setRecentCards((prev) => [
-      { card, playerName },
+    setLobbyActions((prev) => [
+      { type: 'card', card, playerName },
       ...prev.filter((e) => e.card.id !== card.id),
     ])
   }
@@ -508,10 +516,11 @@ export default function Room({ roomId, playerName, password }) {
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
             onClose={() => setSidebarOpen(false)}
-            recentCards={recentCards}
+            lobbyActions={lobbyActions}
             onCardSelect={selectCard}
             deck={myState.deck}
             lobbyCards={lobbyCards}
+            onRollD20={rollD20}
           />
         )}
 

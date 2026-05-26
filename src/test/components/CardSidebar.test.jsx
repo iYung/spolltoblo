@@ -7,7 +7,8 @@ const defaultProps = {
   width: 320,
   onWidthChange: vi.fn(),
   onClose: vi.fn(),
-  recentCards: [],
+  lobbyActions: [],
+  onRollD20: vi.fn(),
   onCardSelect: vi.fn(),
   deck: null,
   lobbyCards: [],
@@ -123,5 +124,51 @@ describe('CardSidebar', () => {
     render(<CardSidebar {...defaultProps} onClose={onClose} />)
     fireEvent.click(screen.getByRole('button', { name: '✕' }))
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('Roll d20 button is always visible even with no lobby actions', () => {
+    render(<CardSidebar {...defaultProps} lobbyActions={[]} />)
+    expect(screen.getByRole('button', { name: 'Roll d20' })).toBeInTheDocument()
+  })
+
+  it('clicking Roll d20 calls onRollD20', () => {
+    const onRollD20 = vi.fn()
+    render(<CardSidebar {...defaultProps} onRollD20={onRollD20} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Roll d20' }))
+    expect(onRollD20).toHaveBeenCalledOnce()
+  })
+
+  it('card-type lobby action renders as a draggable card row', () => {
+    const actions = [{ type: 'card', card: { id: 'c1', name: 'Sol Ring', mana_cost: '{1}' }, playerName: 'Alice' }]
+    render(<CardSidebar {...defaultProps} lobbyActions={actions} />)
+    expect(screen.getByText('Sol Ring')).toBeInTheDocument()
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText('⠿ drag to board')).toBeInTheDocument()
+  })
+
+  it('roll-type lobby action renders player name and result', () => {
+    const actions = [{ type: 'roll', result: 17, playerName: 'Bob' }]
+    render(<CardSidebar {...defaultProps} lobbyActions={actions} />)
+    expect(screen.getByText('Bob')).toBeInTheDocument()
+    expect(screen.getByText('17')).toBeInTheDocument()
+    expect(document.querySelector('.action-roll-entry')).toBeInTheDocument()
+  })
+
+  it('lobby actions feed shows "Lobby Actions" header when feed is non-empty', () => {
+    const actions = [{ type: 'roll', result: 4, playerName: 'Carol' }]
+    render(<CardSidebar {...defaultProps} lobbyActions={actions} />)
+    expect(screen.getByText('Lobby Actions')).toBeInTheDocument()
+  })
+
+  it('mixed card and roll entries both render in the feed', () => {
+    const actions = [
+      { type: 'card', card: { id: 'c2', name: 'Black Lotus', mana_cost: '{0}' }, playerName: 'Alice' },
+      { type: 'roll', result: 20, playerName: 'Bob' },
+    ]
+    render(<CardSidebar {...defaultProps} lobbyActions={actions} />)
+    expect(screen.getByText('Black Lotus')).toBeInTheDocument()
+    expect(screen.getByText('20')).toBeInTheDocument()
+    expect(document.querySelectorAll('.card-result').length).toBe(1)
+    expect(document.querySelectorAll('.action-roll-entry').length).toBe(1)
   })
 })

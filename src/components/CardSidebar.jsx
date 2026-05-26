@@ -4,7 +4,7 @@ import { cardImages } from '../utils/cardImages.js'
 const SCRYFALL_SEARCH = 'https://api.scryfall.com/cards/search'
 
 
-export default function CardSidebar({ width, onWidthChange, onClose, recentCards = [], onCardSelect, deck, lobbyCards = [] }) {
+export default function CardSidebar({ width, onWidthChange, onClose, lobbyActions = [], onRollD20, onCardSelect, deck, lobbyCards = [] }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -131,24 +131,32 @@ export default function CardSidebar({ width, onWidthChange, onClose, recentCards
           </div>
         ))}
       </div>
-      {recentCards.length > 0 && (
+      <button className="d20-btn" onClick={onRollD20}>Roll d20</button>
+      {lobbyActions.length > 0 && (
         <div className="sidebar-recent">
-          <div className="sidebar-recent-header">Recently played by others</div>
-          {recentCards.map(({ card, playerName }, i) => {
-            return (
-              <div
-                key={card.id}
-                className="card-result"
-                draggable
-                onDragStart={(e) => dragCard(e, card)}
-                onMouseEnter={(e) => handleCardMouseEnter(e, card)}
-                onMouseLeave={() => setHoveredCard(null)}
-              >
-                <div className="card-result-header">
-                  <span className="card-name">{card.name}</span>
-                  <span className="card-mana recent-player">{playerName}</span>
+          <div className="sidebar-recent-header">Lobby Actions</div>
+          {lobbyActions.map((entry, i) => {
+            if (entry.type === 'card') {
+              return (
+                <div
+                  key={entry.card.id + '-' + i}
+                  className="card-result"
+                  draggable
+                  onDragStart={(e) => dragCard(e, entry.card)}
+                  onMouseEnter={(e) => handleCardMouseEnter(e, entry.card)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                >
+                  <div className="card-result-header">
+                    <span className="card-name">{entry.card.name}</span>
+                    <span className="card-mana recent-player">{entry.playerName}</span>
+                  </div>
+                  <div className="card-drag-hint">⠿ drag to board</div>
                 </div>
-                <div className="card-drag-hint">⠿ drag to board</div>
+              )
+            }
+            return (
+              <div key={'roll-' + i} className="action-roll-entry">
+                <span className="recent-player">{entry.playerName}</span> rolled a <strong>{entry.result}</strong>
               </div>
             )
           })}

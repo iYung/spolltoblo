@@ -516,6 +516,33 @@ html, body, #root {
   font-style: italic;
 }
 
+.d20-btn {
+  display: block;
+  width: 100%;
+  padding: 7px 0;
+  margin: 8px 0 4px;
+  background: var(--surface);
+  color: #c9b99a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.d20-btn:hover {
+  background: #22223a;
+  border-color: #666;
+}
+
+.action-roll-entry {
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  border-left: 2px solid #7a5ccc;
+  color: #ccc;
+  line-height: 1.4;
+}
+
 .sidebar-open-btn {
   position: absolute;
   right: 0;
