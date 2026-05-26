@@ -1,13 +1,13 @@
-export default function CommanderDamage({ opponents, commanderDamage, onUpdate, poison, onPoisonDelta, onClose }) {
+export default function CommanderDamage({ opponents, commanderDamage, onUpdate, poison, onPoisonDelta, onClose, readOnly = false, title = 'Commander Damage Taken' }) {
   const poisonLethal = poison >= 10
   return (
     <div className="cmd-dmg-overlay" onClick={onClose}>
       <div className="cmd-dmg-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cmd-dmg-header">
-          <h3>Commander Damage Taken</h3>
+          <h3>{title}</h3>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
-        <p className="cmd-dmg-hint">Track damage you've taken from each opponent's commander. 21+ = eliminated.</p>
+        {!readOnly && <p className="cmd-dmg-hint">Track damage you've taken from each opponent's commander. 21+ = eliminated.</p>}
 
         {opponents.length === 0 ? (
           <p className="cmd-dmg-empty">No opponents yet.</p>
@@ -25,11 +25,11 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
                   <li key={opp.peerId} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
                     <span className="opp-name">{label}</span>
                     <div className="cmd-dmg-controls">
-                      <button onClick={() => onUpdate(opp.peerId, -5)} disabled={dmg <= 0}>-5</button>
-                      <button onClick={() => onUpdate(opp.peerId, -1)} disabled={dmg <= 0}>-1</button>
+                      {!readOnly && <button onClick={() => onUpdate(opp.peerId, -5)} disabled={dmg <= 0}>-5</button>}
+                      {!readOnly && <button onClick={() => onUpdate(opp.peerId, -1)} disabled={dmg <= 0}>-1</button>}
                       <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
-                      <button onClick={() => onUpdate(opp.peerId, 1)}>+1</button>
-                      <button onClick={() => onUpdate(opp.peerId, 5)}>+5</button>
+                      {!readOnly && <button onClick={() => onUpdate(opp.peerId, 1)}>+1</button>}
+                      {!readOnly && <button onClick={() => onUpdate(opp.peerId, 5)}>+5</button>}
                     </div>
                     {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
                   </li>
@@ -44,11 +44,11 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
                   <li key={key} className={`cmd-dmg-row ${atLimit ? 'at-limit' : ''}`}>
                     <span className="opp-name">{label}</span>
                     <div className="cmd-dmg-controls">
-                      <button onClick={() => onUpdate(key, -5)} disabled={dmg <= 0}>-5</button>
-                      <button onClick={() => onUpdate(key, -1)} disabled={dmg <= 0}>-1</button>
+                      {!readOnly && <button onClick={() => onUpdate(key, -5)} disabled={dmg <= 0}>-5</button>}
+                      {!readOnly && <button onClick={() => onUpdate(key, -1)} disabled={dmg <= 0}>-1</button>}
                       <span className={`cmd-dmg-value ${atLimit ? 'danger' : ''}`}>{dmg}</span>
-                      <button onClick={() => onUpdate(key, 1)}>+1</button>
-                      <button onClick={() => onUpdate(key, 5)}>+5</button>
+                      {!readOnly && <button onClick={() => onUpdate(key, 1)}>+1</button>}
+                      {!readOnly && <button onClick={() => onUpdate(key, 5)}>+5</button>}
                     </div>
                     {atLimit && <span className="eliminated-tag">ELIMINATED</span>}
                   </li>
@@ -61,9 +61,9 @@ export default function CommanderDamage({ opponents, commanderDamage, onUpdate, 
         <div className="cmd-dmg-poison-row">
           <span className="cmd-dmg-poison-label">☠ Poison counters</span>
           <div className="cmd-dmg-controls">
-            <button onClick={() => onPoisonDelta(-1)} disabled={poison <= 0}>-1</button>
+            {!readOnly && <button onClick={() => onPoisonDelta(-1)} disabled={poison <= 0}>-1</button>}
             <span className={`cmd-dmg-value ${poisonLethal ? 'danger' : ''}`}>{poison}</span>
-            <button onClick={() => onPoisonDelta(1)}>+1</button>
+            {!readOnly && <button onClick={() => onPoisonDelta(1)}>+1</button>}
           </div>
           {poisonLethal && <span className="eliminated-tag">ELIMINATED</span>}
         </div>

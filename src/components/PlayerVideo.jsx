@@ -3,12 +3,13 @@ import CommanderDamage from './CommanderDamage.jsx'
 import CommanderPicker from './CommanderPicker.jsx'
 import { cardImages } from '../utils/cardImages.js'
 
-export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart, onDragEnd }) {
+export default function PlayerVideo({ player, isLocal, opponents, allPlayers = [], onLifeDelta, onSetLife, onCommanderDamage, onPoisonDelta, onReset, volume, rotated, onVolumeChange, onToggleRotate, onSetCommanders, onLoadDeck, isMuted, isVideoHidden, onToggleMute, onToggleVideo, onDragStart, onDragEnd }) {
   const videoRef = useRef(null)
   const commanderBarRef = useRef(null)
   const [editingLife, setEditingLife] = useState(false)
   const [lifeInput, setLifeInput] = useState('')
   const [showCmdDmg, setShowCmdDmg] = useState(false)
+  const [showOpponentStats, setShowOpponentStats] = useState(false)
   const [showCommanderPicker, setShowCommanderPicker] = useState(false)
   const [pickerMode, setPickerMode] = useState('primary')
   const [commanderHoverRect, setCommanderHoverRect] = useState(null)
@@ -144,11 +145,19 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           )}
         </div>
 
-        {isLocal && (
+        {isLocal ? (
           <button
             className={`overlay-btn cmd-btn ${totalCmdDmg > 0 || poison > 0 ? 'has-damage' : ''}`}
             onClick={() => setShowCmdDmg(true)}
             title="Commander damage & poison"
+          >
+            DMG
+          </button>
+        ) : (
+          <button
+            className={`overlay-btn cmd-btn ${Object.values(commanderDamage).some(d => d >= 21) || poison >= 10 ? 'has-damage' : ''}`}
+            onClick={() => setShowOpponentStats(true)}
+            title="View commander damage & poison"
           >
             DMG
           </button>
@@ -207,6 +216,17 @@ export default function PlayerVideo({ player, isLocal, opponents, onLifeDelta, o
           poison={poison}
           onPoisonDelta={onPoisonDelta}
           onClose={() => setShowCmdDmg(false)}
+        />
+      )}
+
+      {showOpponentStats && !isLocal && (
+        <CommanderDamage
+          readOnly
+          title={`Damage Received by ${name}`}
+          opponents={allPlayers.filter(p => p.peerId !== player.peerId)}
+          commanderDamage={commanderDamage}
+          poison={poison}
+          onClose={() => setShowOpponentStats(false)}
         />
       )}
 

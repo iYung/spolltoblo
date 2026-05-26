@@ -124,3 +124,66 @@ describe('CommanderDamage', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
+
+describe('CommanderDamage readOnly prop', () => {
+  const opponents = [{ peerId: 'p1', name: 'Alice', state: { commanders: [] } }]
+  const commanderDamage = { p1: 14 }
+
+  it('renders no +/- buttons when readOnly is true', () => {
+    render(
+      <CommanderDamage
+        {...defaultProps}
+        opponents={opponents}
+        commanderDamage={commanderDamage}
+        poison={3}
+        readOnly
+      />
+    )
+    expect(screen.queryAllByRole('button', { name: /^[+-]/ })).toHaveLength(0)
+    // The only button present should be the close button
+    const buttons = screen.getAllByRole('button')
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]).toHaveClass('close-btn')
+  })
+
+  it('renders the supplied title in the header h3 when readOnly is true', () => {
+    render(
+      <CommanderDamage
+        {...defaultProps}
+        opponents={opponents}
+        commanderDamage={commanderDamage}
+        poison={0}
+        readOnly
+        title="Damage Received by Bob"
+      />
+    )
+    expect(screen.getByRole('heading', { name: 'Damage Received by Bob' })).toBeInTheDocument()
+  })
+
+  it('still displays damage values and poison value when readOnly is true', () => {
+    render(
+      <CommanderDamage
+        {...defaultProps}
+        opponents={opponents}
+        commanderDamage={commanderDamage}
+        poison={7}
+        readOnly
+      />
+    )
+    expect(screen.getByText('14')).toBeInTheDocument()
+    expect(screen.getByText('7')).toBeInTheDocument()
+  })
+
+  it('renders +/- buttons when readOnly is false (default)', () => {
+    render(
+      <CommanderDamage
+        {...defaultProps}
+        opponents={opponents}
+        commanderDamage={commanderDamage}
+        poison={0}
+      />
+    )
+    expect(screen.getAllByText('+1').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('-1').length).toBeGreaterThan(0)
+  })
+})

@@ -479,6 +479,7 @@ export default function Room({ roomId, playerName, password }) {
       <div className="room-body">
         <PlayArea
           players={allPlayers}
+          allPlayers={allPlayers}
           myId={myId.current}
           pinnedCards={pinnedCards}
           onPinCard={pinCard}
