@@ -331,7 +331,7 @@ html, body, #root {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 24px;
-  width: 1020px;
+  width: 714px;
   max-height: 80vh;
   overflow-y: auto;
 }
