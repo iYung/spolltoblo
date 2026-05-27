@@ -251,7 +251,7 @@ export default function Room({ roomId, playerName, password }) {
           } else if (payload.type === 'card-pinned') {
             setLobbyActions((prev) => [
               { type: 'card', card: payload.card, playerName: payload.playerName },
-              ...prev.filter((e) => e.card.id !== payload.card.id),
+              ...prev.filter((e) => e.type !== 'card' || e.card.id !== payload.card.id),
             ])
           } else if (payload.type === 'd20-roll') {
             setLobbyActions((prev) => [{ type: 'roll', result: payload.result, playerName: payload.playerName }, ...prev])
@@ -353,7 +353,7 @@ export default function Room({ roomId, playerName, password }) {
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
     setLobbyActions((prev) => [
       { type: 'card', card, playerName },
-      ...prev.filter((e) => e.card.id !== card.id),
+      ...prev.filter((e) => e.type !== 'card' || e.card.id !== card.id),
     ])
   }
 
@@ -361,7 +361,7 @@ export default function Room({ roomId, playerName, password }) {
     broadcastGameEvent({ type: 'card-pinned', card, playerName })
     setLobbyActions((prev) => [
       { type: 'card', card, playerName },
-      ...prev.filter((e) => e.card.id !== card.id),
+      ...prev.filter((e) => e.type !== 'card' || e.card.id !== card.id),
     ])
   }
 
