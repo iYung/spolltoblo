@@ -92,7 +92,7 @@ const OTHER_CARD = { id: 'c2', name: 'Black Lotus', mana_cost: '{0}' }
 
 describe('Room — lobbyActions state management', () => {
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.clearAllMocks()
     MockWebSocket.last = null
   })
 
