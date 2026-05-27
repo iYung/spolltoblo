@@ -28,6 +28,7 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Life tracking** — click your life total to edit it directly; use +1 / -1 / +5 / -5 buttons; syncs to all players in real time
 - **Commander damage** — track damage from each opponent's commander separately with +1 / -1 / +5 / -5 buttons; adjusting commander damage automatically updates your life total; partner commanders each get an independent damage track; highlights at 21 (elimination threshold)
 - **Opponent stats view** — click any opponent's life total to see a read-only panel of the commander damage and poison counters that player has received, broken down per attacker
+- **Lobby Actions** — unified activity feed at the bottom of the sidebar showing card plays by others (draggable onto the board) and die roll results; Roll d20 button above the feed broadcasts your result to everyone in the room
 - **Mute / hide camera** — MUTE and CAM buttons on your own tile let you disable your microphone or camera mid-session; buttons turn red when active; state survives device switches
 - **Shareable rooms** — room lives in the URL; no sign-up required
 
