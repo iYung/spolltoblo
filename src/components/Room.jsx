@@ -53,7 +53,7 @@ export default function Room({ roomId, playerName, password }) {
   // Get camera / mic — re-runs when device selection changes
   useEffect(() => {
     const { videoDeviceId, audioDeviceId } = deviceIds
-    const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId }, aspectRatio: { ideal: 16/9 } } : { aspectRatio: { ideal: 16/9 } }
+    const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId }, width: { ideal: 9999 }, aspectRatio: { ideal: 16/9 } } : { width: { ideal: 9999 }, aspectRatio: { ideal: 16/9 } }
     const audioConstraint = audioDeviceId ? { deviceId: { exact: audioDeviceId } } : true
 
     navigator.mediaDevices
