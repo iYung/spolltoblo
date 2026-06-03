@@ -62,4 +62,16 @@ describe('App', () => {
     expect(url).toMatch(/^\/[a-z0-9]{8}$/)
     pushState.mockRestore()
   })
+
+  it('shows the fan content footer on the landing page', () => {
+    render(<App />)
+    expect(screen.getByText(/unofficial Fan Content/i)).toBeInTheDocument()
+  })
+
+  it('does not show the fan content footer after joining', () => {
+    setPathname('/someroom')
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: /join room/i }))
+    expect(screen.queryByText(/unofficial Fan Content/i)).not.toBeInTheDocument()
+  })
 })
