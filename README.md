@@ -32,6 +32,10 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 - **Mute / hide camera** — MUTE and CAM buttons on your own tile let you disable your microphone or camera mid-session; buttons turn red when active; state survives device switches
 - **Shareable rooms** — room lives in the URL; no sign-up required
 
+## Legal
+
+SpollToblo is unofficial Fan Content permitted under the [Wizards of the Coast Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy). Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+
 ## Testing
 
 Run the test suite once (used in CI):

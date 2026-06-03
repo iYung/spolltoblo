@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Room from './components/Room.jsx'
+import Footer from './components/Footer.jsx'
 import { generateId } from './utils/id.js'
 
 export default function App() {
@@ -60,6 +61,7 @@ export default function App() {
             <p className="room-hint">Joining room <code>{roomId}</code></p>
           )}
         </div>
+        <Footer />
       </div>
     )
   }
