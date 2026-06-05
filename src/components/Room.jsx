@@ -70,6 +70,8 @@ export default function Room({ roomId, playerName, password }) {
         setLocalStream(stream)
         stream.getAudioTracks().forEach(t => { t.enabled = !isMutedRef.current })
         stream.getVideoTracks().forEach(t => { t.enabled = !isVideoHiddenRef.current })
+        // Re-acquire if the audio device is unplugged or the OS switches devices
+        stream.getAudioTracks().forEach(t => { t.onended = () => setDeviceIds(prev => ({ ...prev })) })
       })
       .catch(() => {
         if (!localStreamRef.current) {
@@ -79,6 +81,10 @@ export default function Room({ roomId, playerName, password }) {
           setLocalStream(emptyStream)
         }
       })
+
+    function handleDeviceChange() { setDeviceIds(prev => ({ ...prev })) }
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
+    return () => navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
   }, [deviceIds])
 
   useEffect(() => {
@@ -119,12 +125,41 @@ export default function Room({ roomId, playerName, password }) {
       if (candidate) sendWs({ type: 'ice-candidate', to: peerId, candidate })
     }
 
+    let disconnectTimer = null
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'failed') pc.close()
+      const state = pc.connectionState
+      if (state === 'connected') {
+        clearTimeout(disconnectTimer)
+        disconnectTimer = null
+      } else if (state === 'disconnected') {
+        disconnectTimer = setTimeout(() => {
+          if (pcsRef.current[peerId] === pc) {
+            pc.close()
+            attemptReconnect(peerId)
+          }
+        }, 8000)
+      } else if (state === 'failed') {
+        clearTimeout(disconnectTimer)
+        disconnectTimer = null
+        pc.close()
+        attemptReconnect(peerId)
+      }
     }
 
     pcsRef.current[peerId] = pc
     return pc
+  }
+
+  async function attemptReconnect(peerId) {
+    delete pcsRef.current[peerId]
+    // Lexicographically smaller ID initiates to avoid both sides sending offers simultaneously
+    if (myId.current > peerId) return
+    await new Promise((r) => setTimeout(r, 2000))
+    if (pcsRef.current[peerId]) return // other side already reconnected
+    const pc = createPC(peerId)
+    const offer = await pc.createOffer()
+    await pc.setLocalDescription(offer)
+    sendWs({ type: 'offer', to: peerId, sdp: offer })
   }
 
   // WebSocket + signaling
