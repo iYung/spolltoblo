@@ -21,7 +21,7 @@ Vite runs on `http://localhost:5173`, signaling server on `http://localhost:3001
 
 ## Features
 
-- **Webcam streaming** — low-latency peer-to-peer video via WebRTC, no server relay; peer connections automatically reconnect on network drops, and audio tracks recover when the OS switches or disconnects an audio device
+- **Webcam streaming** — low-latency peer-to-peer video via WebRTC, no server relay; peer connections automatically reconnect on network drops, and audio tracks recover when the OS switches or disconnects an audio device; video quality adapts automatically to available bandwidth and CPU — stepping down when the connection is struggling and recovering when conditions improve
 - **Card search** — resizable right sidebar powered by the Scryfall API; search any Magic card by name; hover a result to see its artwork (dual-faced cards show both faces side by side)
 - **Card pins** — drag a card from the sidebar onto the board; hover the chip to see the card image (dual-faced cards show both faces side by side); grab the `⠿` handle to reposition it
 - **Deck loading** — paste an Archidekt URL to load your deck; card search scopes to lobby decks instantly with no API calls; auto-sets your commander (and partner commander if present)

@@ -7,6 +7,11 @@ import DeviceSelector from './DeviceSelector.jsx'
 import { enrichDeck } from '../utils/enrichDeck.js'
 
 const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+const QUALITY_LEVELS = {
+  high:   { width: undefined, maxVideoBps: 2_500_000, maxAudioBps: 128_000 },
+  medium: { width: 640,       maxVideoBps:   500_000, maxAudioBps:  64_000 },
+  low:    { width: 320,       maxVideoBps:   150_000, maxAudioBps:  32_000 },
+}
 const DEFAULT_LIFE = 40
 
 export default function Room({ roomId, playerName, password }) {
@@ -35,6 +40,81 @@ export default function Room({ roomId, playerName, password }) {
   const [lobbyActions, setLobbyActions] = useState([])
   const [showDeviceSelector, setShowDeviceSelector] = useState(false)
   const [deviceIds, setDeviceIds] = useState({ videoDeviceId: '', audioDeviceId: '' })
+  const [quality, setQuality] = useState('high')
+  const qualityRef = useRef('high')
+  const consecutiveBadTicksRef = useRef(0)
+  const stableTicksRef = useRef(0)
+  const cooldownUntilRef = useRef(0)
+
+  useEffect(() => { qualityRef.current = quality }, [quality])
+
+  useEffect(() => {
+    if (!localStream) return
+
+    const LEVELS = ['low', 'medium', 'high']
+
+    const interval = setInterval(async () => {
+      const pcs = Object.values(pcsRef.current)
+      if (!pcs.length) return
+
+      let badTick = false
+      for (const pc of pcs) {
+        if (pc.connectionState !== 'connected') continue
+        const stats = await pc.getStats()
+        let limitationReason = 'none'
+        let fractionLost = 0
+        stats.forEach((report) => {
+          if (report.type === 'outbound-rtp' && report.kind === 'video') {
+            limitationReason = report.qualityLimitationReason ?? 'none'
+          }
+          if (report.type === 'remote-inbound-rtp' && report.kind === 'video') {
+            fractionLost = report.fractionLost ?? 0
+          }
+        })
+        if (limitationReason !== 'none' || fractionLost > 0.05) {
+          badTick = true
+          break
+        }
+      }
+
+      if (badTick) {
+        consecutiveBadTicksRef.current += 1
+        stableTicksRef.current = 0
+      } else {
+        consecutiveBadTicksRef.current = 0
+        stableTicksRef.current += 1
+      }
+
+      const currentLevel = qualityRef.current
+      const currentIdx = LEVELS.indexOf(currentLevel)
+
+      // Step down
+      if (consecutiveBadTicksRef.current >= 2 && currentIdx > 0) {
+        const newLevel = LEVELS[currentIdx - 1]
+        qualityRef.current = newLevel
+        setQuality(newLevel)
+        applyBitrateCapsToAll(newLevel)
+        consecutiveBadTicksRef.current = 0
+        stableTicksRef.current = 0
+        cooldownUntilRef.current = Date.now() + 3 * 60 * 1000
+      }
+
+      // Step up
+      if (
+        stableTicksRef.current >= 12 &&
+        currentIdx < LEVELS.length - 1 &&
+        Date.now() >= cooldownUntilRef.current
+      ) {
+        const newLevel = LEVELS[currentIdx + 1]
+        qualityRef.current = newLevel
+        setQuality(newLevel)
+        applyBitrateCapsToAll(newLevel)
+        stableTicksRef.current = 0
+      }
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [localStream])
 
   // Initialize my own game state
   useEffect(() => {
@@ -53,7 +133,12 @@ export default function Room({ roomId, playerName, password }) {
   // Get camera / mic — re-runs when device selection changes
   useEffect(() => {
     const { videoDeviceId, audioDeviceId } = deviceIds
-    const videoConstraint = videoDeviceId ? { deviceId: { exact: videoDeviceId }, width: { ideal: 9999 }, aspectRatio: { ideal: 16/9 } } : { width: { ideal: 9999 }, aspectRatio: { ideal: 16/9 } }
+    const w = QUALITY_LEVELS[qualityRef.current].width
+    const videoConstraint = {
+      ...(videoDeviceId ? { deviceId: { exact: videoDeviceId } } : {}),
+      ...(w ? { width: { ideal: w } } : {}),
+      aspectRatio: { ideal: 16 / 9 },
+    }
     const audioConstraint = audioDeviceId ? { deviceId: { exact: audioDeviceId } } : true
 
     navigator.mediaDevices
@@ -85,7 +170,7 @@ export default function Room({ roomId, playerName, password }) {
     function handleDeviceChange() { setDeviceIds(prev => ({ ...prev })) }
     navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
     return () => navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
-  }, [deviceIds])
+  }, [deviceIds, quality])
 
   useEffect(() => {
     return () => localStreamRef.current?.getTracks().forEach((t) => t.stop())
@@ -105,6 +190,21 @@ export default function Room({ roomId, playerName, password }) {
     const result = Math.ceil(Math.random() * 20)
     broadcastGameEvent({ type: 'd20-roll', result, playerName })
     setLobbyActions((prev) => [{ type: 'roll', result, playerName }, ...prev])
+  }
+
+  async function applyBitrateCaps(pc, level) {
+    const { maxVideoBps, maxAudioBps } = QUALITY_LEVELS[level]
+    for (const sender of pc.getSenders()) {
+      if (!sender.track) continue
+      const params = sender.getParameters()
+      if (!params.encodings?.length) params.encodings = [{}]
+      params.encodings[0].maxBitrate = sender.track.kind === 'video' ? maxVideoBps : maxAudioBps
+      await sender.setParameters(params)
+    }
+  }
+
+  function applyBitrateCapsToAll(level) {
+    Object.values(pcsRef.current).forEach((pc) => applyBitrateCaps(pc, level))
   }
 
   function createPC(peerId) {
@@ -131,6 +231,7 @@ export default function Room({ roomId, playerName, password }) {
       if (state === 'connected') {
         clearTimeout(disconnectTimer)
         disconnectTimer = null
+        applyBitrateCaps(pc, qualityRef.current)
       } else if (state === 'disconnected') {
         disconnectTimer = setTimeout(() => {
           if (pcsRef.current[peerId] === pc) {
