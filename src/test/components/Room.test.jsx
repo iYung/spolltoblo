@@ -29,6 +29,7 @@ class MockRTCPeerConnection {
     this.createAnswer = vi.fn().mockResolvedValue({ type: 'answer', sdp: '' })
     this.addIceCandidate = vi.fn().mockResolvedValue(undefined)
     this.close = vi.fn()
+    this.getStats = vi.fn().mockResolvedValue({ forEach: () => {} })
     MockRTCPeerConnection.instances.push(this)
   }
 
@@ -246,6 +247,129 @@ describe('Room — peer connection reconnection', () => {
     // After 8s: reconnect fires
     await act(async () => { await vi.runAllTimersAsync() })
     expect(pc.close).toHaveBeenCalled()
+  })
+})
+
+describe('Room — adaptive video quality', () => {
+  function makeStats({ limitationReason = 'none', fractionLost = 0 } = {}) {
+    const reports = [
+      { type: 'outbound-rtp', kind: 'video', qualityLimitationReason: limitationReason },
+      { type: 'remote-inbound-rtp', kind: 'video', fractionLost },
+    ]
+    return { forEach: (cb) => reports.forEach(cb) }
+  }
+
+  async function renderWithConnectedPeer() {
+    vi.mocked(generateId).mockReturnValue('aaaa')
+    await renderRoom()
+    await act(async () => {
+      MockWebSocket.last.simulateMessage({
+        type: 'room-peers',
+        myJoinOrder: 0,
+        peers: [{ peerId: 'zzzz', name: 'Bob', joinOrder: 1 }],
+        playerOrder: ['aaaa', 'zzzz'],
+      })
+    })
+    await act(async () => {})
+    const pc = MockRTCPeerConnection.instances[0]
+    pc.getStats = vi.fn().mockResolvedValue(makeStats())
+    pc._connectionState = 'connected'
+    return pc
+  }
+
+  afterEach(() => {
+    vi.clearAllMocks()
+    vi.useRealTimers()
+    MockWebSocket.last = null
+  })
+
+  it('applies video bitrate cap to senders when a peer connection first reaches connected', async () => {
+    const mockSender = {
+      track: { kind: 'video' },
+      getParameters: vi.fn(() => ({ encodings: [{}] })),
+      setParameters: vi.fn().mockResolvedValue(undefined),
+    }
+    const pc = await renderWithConnectedPeer()
+    pc.getSenders.mockReturnValue([mockSender])
+
+    await act(async () => { pc.simulateStateChange('connected') })
+
+    expect(mockSender.setParameters).toHaveBeenCalledWith(
+      expect.objectContaining({ encodings: [{ maxBitrate: 2_500_000 }] })
+    )
+  })
+
+  it('steps quality down to medium after 2 consecutive bad ticks due to bandwidth limitation', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const pc = await renderWithConnectedPeer()
+    pc.getStats = vi.fn().mockResolvedValue(makeStats({ limitationReason: 'bandwidth' }))
+
+    const callsBefore = navigator.mediaDevices.getUserMedia.mock.calls.length
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000) }) // 2 ticks
+
+    await waitFor(() => {
+      const newCalls = navigator.mediaDevices.getUserMedia.mock.calls.slice(callsBefore)
+      expect(newCalls.some(([c]) => c.video?.width?.ideal === 640)).toBe(true)
+    })
+  })
+
+  it('steps quality down to medium after 2 consecutive bad ticks due to high packet loss', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const pc = await renderWithConnectedPeer()
+    pc.getStats = vi.fn().mockResolvedValue(makeStats({ fractionLost: 0.1 }))
+
+    const callsBefore = navigator.mediaDevices.getUserMedia.mock.calls.length
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000) }) // 2 ticks
+
+    await waitFor(() => {
+      const newCalls = navigator.mediaDevices.getUserMedia.mock.calls.slice(callsBefore)
+      expect(newCalls.some(([c]) => c.video?.width?.ideal === 640)).toBe(true)
+    })
+  })
+
+  it('does not step down quality after only one bad tick', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const pc = await renderWithConnectedPeer()
+    pc.getStats = vi.fn()
+      .mockResolvedValueOnce(makeStats({ limitationReason: 'bandwidth' }))
+      .mockResolvedValue(makeStats())
+
+    const callsBefore = navigator.mediaDevices.getUserMedia.mock.calls.length
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000) }) // 1 bad tick
+
+    expect(navigator.mediaDevices.getUserMedia.mock.calls.length).toBe(callsBefore)
+  })
+
+  it('suppresses step-up while the 3-minute cooldown is active after a step-down', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const pc = await renderWithConnectedPeer()
+    pc.getStats = vi.fn().mockResolvedValue(makeStats({ limitationReason: 'bandwidth' }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000) }) // step down
+
+    pc.getStats.mockResolvedValue(makeStats())
+    const callsAfterStepDown = navigator.mediaDevices.getUserMedia.mock.calls.length
+    // 12 stable ticks = 60s, well within the 3-min cooldown
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000) })
+
+    const newCalls = navigator.mediaDevices.getUserMedia.mock.calls.slice(callsAfterStepDown)
+    // Should not have stepped back up (no high-quality call without width constraint)
+    expect(newCalls.some(([c]) => c.video && !c.video.width)).toBe(false)
+  })
+
+  it('steps quality back up to high after 12 stable ticks once the cooldown expires', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] })
+    const pc = await renderWithConnectedPeer()
+    pc.getStats = vi.fn().mockResolvedValue(makeStats({ limitationReason: 'bandwidth' }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000) }) // step down
+
+    pc.getStats.mockResolvedValue(makeStats())
+    // Advance past the 3-min cooldown (180s) plus 12 stable ticks (60s) = 240s
+    await act(async () => { await vi.advanceTimersByTimeAsync(3 * 60 * 1000 + 60000) })
+
+    await waitFor(() => {
+      const last = navigator.mediaDevices.getUserMedia.mock.lastCall
+      expect(last[0].video?.width).toBeUndefined()
+    })
   })
 })
 
